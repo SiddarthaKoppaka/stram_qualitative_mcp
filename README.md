@@ -1,79 +1,61 @@
 # Stram Qualitative MCP
 
-Stram Qualitative MCP is the read-only MCP Tool Plane for Stram's News & Intelligence data. It exposes
-the pinned `stram_data.data_interface` 1.6.0 API over authenticated Streamable HTTP. This repository
-owns transport, identity, authorization, bounds, worker isolation, audit and telemetry. It does not
-own SQL, ingestion, ranking, scoring, lake schemas or AI orchestration.
+Stram Qualitative MCP lets AI agents read Stram's News & Intelligence data over the
+[Model Context Protocol](https://modelcontextprotocol.io). An agent can search news about the tracked
+companies, list SEC filings, read the article text we hold, and see attention and tone over time.
 
-It is built from [`stram_quant_mcp`](https://github.com/SiddarthaKoppaka/stram_quant_mcp) at commit
-`d191333` and keeps that service's security model.
+The service is read-only. It owns transport, login, permissions, limits, worker isolation, audit and
+telemetry. All data comes through the public `stram_data.data_interface`. It holds no SQL, ingestion,
+ranking or scoring. It follows [`stram_quant_mcp`](https://github.com/SiddarthaKoppaka/stram_quant_mcp)
+and keeps that service's security model.
 
-Status: M5. All five tools run as a loopback demonstration on the live lake, with story collapsing
-still to come. See [PLANS.md](PLANS.md).
+**Status:** all five tools work on the live data, as a private demonstration reached through an SSH
+tunnel. It uses a test login, so it is not ready to share. See [what is not done yet](docs/GAPS.md).
 
-## Architecture in five minutes
+## Tools
 
-```mermaid
-flowchart LR
-    C[MCP client] -->|HTTPS + bearer JWT| T[Streamable HTTP]
-    T --> A[JWT authentication]
-    A --> P[tenant, scope, rate and bounds]
-    P --> J[(HMAC-chained audit)]
-    P --> W[isolated query worker]
-    W --> I[stram_data.data_interface 1.6.0]
-    I --> D[DuckDB over read-only Parquet]
-    W -. no token, socket APIs blocked .-> I
-```
-
-Every call is authenticated and authorized before worker dispatch. The worker receives only a tool
-name, validated arguments and a request ID. It imports only the public Data Interface. Terminal
-success, denial and failure outcomes are appended to the audit chain; an audit append failure fails
-the call closed. See [Architecture](docs/ARCHITECTURE.md) for the complete lifecycle and boundaries.
+| Tool | What it does | Permission |
+|---|---|---|
+| `qual_describe_coverage` | Sources, date ranges, tracked tickers, known gaps | `qual:discover` |
+| `qual_search_news` | Find articles by ticker, keyword, source and date | `qual:read` |
+| `qual_get_filings` | List SEC filings by ticker, form and date | `qual:read` |
+| `qual_get_article` | Read one article's text in pages | `qual:text` |
+| `qual_get_news_timeline` | Daily article counts and GDELT tone per ticker | `qual:analytics` |
 
 ## Quick start
 
-Supported toolchain: CPython 3.12 through 3.14 and `uv`. The lock pins the exact `stram-data` source
-commit for release 1.6.0. Private repository access is needed only when the dependency is not already
-available in the local cache.
+You need Linux or WSL, Python 3.12 or later, [`uv`](https://docs.astral.sh/uv/), and read access to the
+private `stram_data` repository. No real data or login server is needed: this uses a small invented
+news lake and a throwaway identity.
 
 ```bash
+git clone https://github.com/SiddarthaKoppaka/stram_qualitative_mcp.git
+cd stram_qualitative_mcp
 uv sync --frozen --dev
-uv run python -c 'import stram_data; assert stram_data.__version__ == "1.6.0"'
-uv run pytest tests/integration/test_mcp_client.py -q
+uv run python tools/dev_server.py
 ```
 
-The integration test starts the real server on loopback, signs a short-lived JWT, connects with the
-official MCP SDK client, discovers the tools and calls the real Data Interface against
-`tests/fixtures/news/parquet`. It does not use production credentials or mocked qualitative responses.
-
-Run the complete local gate:
+Leave that running. In a second terminal:
 
 ```bash
-uv run pytest --cov --cov-report=term-missing
-uv run mypy
-uv run ruff check .
-uv run ruff format --check .
-uv run python -m stram_qualitative_mcp.tools.export_schema --check
-uv run python tools/check_docs.py
+uv run python tools/try_client.py
 ```
 
-Container startup is stricter than local tests: the `serve` entrypoint runs preflight and refuses root
-execution, a writable root filesystem, a writable lake, or dependency/interface drift.
+You should see all five tools listed, then a line of results from each. The
+[onboarding guide](docs/ONBOARDING.md) explains each step and what to do if one fails.
 
 ## Documentation
 
-Use the entry point that matches the job:
+Start with [docs/README.md](docs/README.md), which says what to read for each job.
 
 | Need | Document |
 |---|---|
-| Understand boundaries and failure behavior | [Architecture](docs/ARCHITECTURE.md) |
-| Install, test and connect a client | [Onboarding](docs/ONBOARDING.md) |
-| Look up tool schemas, scopes and errors | [Tool reference](docs/TOOLS.md) |
-| Build, stage, monitor, recover or roll back | [Operations](docs/OPERATIONS.md) |
-| Review Data host prerequisites and templates | [Deployment](deploy/README.md) |
-| See milestone evidence and unresolved decisions | [Plans](PLANS.md) |
-| Apply normative engineering rules | [Engineering standards](ENGINEERING.md) |
-| Review the PyArrow exception | [Security exceptions](docs/SECURITY_EXCEPTIONS.md) |
-| Read release-candidate notes | [Changelog](CHANGELOG.md) |
-
-Do not deploy, access production secrets or change the data host without separate authorization.
+| Run it for the first time | [Onboarding](docs/ONBOARDING.md) |
+| Connect an agent and use the tools well | [How to consume](docs/HOWTO_CONSUME.md) |
+| Look up a tool's inputs and outputs | [Tool reference](docs/TOOLS.md) |
+| Understand how it works | [Architecture](docs/ARCHITECTURE.md) |
+| Install it on a server | [Deployment](deploy/README.md) |
+| Keep it running | [Operations](docs/OPERATIONS.md) |
+| See what is missing | [Gaps](docs/GAPS.md) |
+| See the plan and evidence | [Plans](PLANS.md) |
+| Follow the engineering rules | [Engineering standards](ENGINEERING.md) |

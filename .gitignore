@@ -12,3 +12,4 @@ htmlcov/
 vendor/
 *.db
 *.sqlite3
+.local/

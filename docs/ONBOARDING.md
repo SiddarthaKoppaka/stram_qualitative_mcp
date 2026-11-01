@@ -1,156 +1,157 @@
 # Onboarding
 
-This tutorial separates local development, consumer integration, server installation and authorized
-the data host access. Local workflows use only the synthetic lake. Steps labelled **not yet verified** require
-staging or production access and must not be run without separate authorization.
+This takes you from nothing to a running service and all five tools answering, in about ten minutes.
+It uses invented data and a throwaway login, so you need no server, secrets or real data.
 
-## Prerequisites
+## What you need
 
-- CPython 3.12, 3.13 or 3.14.
-- `uv` and Git.
-- Read access to the private pinned `stram_data` source when it is not already cached.
-- For container work, Podman or Docker with BuildKit-compatible build support.
-- For a long-running authenticated server, an OAuth/OIDC issuer that provides asymmetric JWTs and a
-  reachable JWKS endpoint. Local automated integration generates an ephemeral test identity instead.
+- **Linux, or WSL on Windows.** The worker's network isolation and memory limit only work on Linux.
+- **Python 3.12, 3.13 or 3.14.**
+- **[`uv`](https://docs.astral.sh/uv/)**, which installs everything else.
+- **Git**, with read access to the private `stram_data` repository. Ask the repository owner if you
+  do not have it.
 
-The exact runtime dependency is `stram-data` 1.6.0 at Git commit
-`947e49b2cd054e280918274e27e6940d7327e17f`; `uv.lock` is authoritative.
-
-## Local development
-
-From the repository root:
+Check your access before going further. This should print a commit, not an error:
 
 ```bash
+git ls-remote https://github.com/SiddarthaKoppaka/stram_data.git HEAD
+```
+
+## 1. Install
+
+```bash
+git clone https://github.com/SiddarthaKoppaka/stram_qualitative_mcp.git
+cd stram_qualitative_mcp
 uv sync --frozen --dev
-uv run python -c 'import stram_data; assert stram_data.__version__ == "1.6.0"'
+```
+
+`--frozen` installs exactly what `uv.lock` pins, including the exact `stram_data` commit. Confirm it:
+
+```bash
+uv run python -c 'import stram_data; print(stram_data.__version__)'
+```
+
+Expected: `1.6.0`.
+
+## 2. Start the service
+
+```bash
+uv run python tools/dev_server.py
+```
+
+Expected: it prints the endpoint and token path, then keeps running:
+
+```text
+MCP endpoint: http://127.0.0.1:8765/mcp
+Token, valid for one hour: .../.local/token
+```
+
+This is the real server, with real login checks, audit and worker isolation. Only two things are
+stand-ins. The data is the invented lake in `tests/fixtures/news/`, and instead of a login server the
+script makes a temporary signing key, serves its public half on port 8766, and writes a one-hour
+token. Everything it creates is in `.local/`, which Git ignores.
+
+Leave it running. To get a new token, stop it with Ctrl+C and start it again.
+
+## 3. Call the tools
+
+In a second terminal, from the same folder:
+
+```bash
+curl -s http://127.0.0.1:8765/health/ready
+uv run python tools/try_client.py
+```
+
+Expected:
+
+```text
+{"status":"ready"}
+tools: qual_describe_coverage, qual_get_article, qual_get_filings, qual_get_news_timeline, qual_search_news
+coverage: finnhub 7, gdelt 1, sec 2; 80 tracked tickers
+search AAPL: 3 articles, truncated=False
+filings AAPL: 1
+timeline AAPL: 3 days
+article: read 4000 of 9120 chars
+```
+
+That confirms the whole path: client, login, permissions, worker, Data Interface and Parquet.
+
+Requests without a valid token are refused. This should print `401`:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:8765/mcp
+```
+
+## 4. Connect an agent
+
+With the server still running, add it to Claude Code:
+
+```bash
+claude mcp add --transport http stram-qual http://127.0.0.1:8765/mcp \
+  --header "Authorization: Bearer $(cat .local/token)"
+```
+
+Then ask something like "What news do we have on AAPL in October 2026?" Remember that the data is
+invented, and that the token lasts an hour. See [How to consume](HOWTO_CONSUME.md) for other clients.
+
+## 5. Run the checks
+
+These are the checks CI runs on every push to `main`:
+
+```bash
+uv run pytest --cov --cov-report=term-missing
+uv run mypy
+uv run ruff check .
+uv run ruff format --check .
 uv run python -m stram_qualitative_mcp.tools.export_schema --check
+uv run python tools/check_docs.py
 ```
 
-Expected: dependency sync succeeds, the version assertion prints nothing, and schema check reports no
-drift. If Git authentication fails, request read-only repository access; do not place a token in the
-URL, lockfile or shell history.
+CI also runs the dependency, secret and license checks, then builds the image and tests it. It needs
+the `STRAM_DATA_READ_TOKEN` Actions secret to read `stram_data`.
 
-Run the fast architectural and real-interface checks:
+To change the test data, edit `tests/support/build_news_fixture.py` and rebuild it. Keep it invented,
+because this repository is public:
 
 ```bash
-uv run pytest tests/contract tests/security/test_no_sql_or_execution.py -q
-uv run pytest tests/integration/test_read_tools.py tests/integration/test_analytics_tools.py -q
+uv run python tests/support/build_news_fixture.py
 ```
 
-Expected: the contract pin, the news search tool, and the security, worker and telemetry suites pass
-against `tests/fixtures/news/parquet`.
+## Changing the code
 
-## Start and connect with a test identity
+**To add a tool:**
 
-The supported, hermetic local workflow is the integration test:
+1. Add its input and output models to `tool_models.py`.
+2. Add it to `TOOL_SPECS` in `tool_registry.py`, with one scope and a deadline.
+3. Call the Data Interface from `tool_adapter.py`. Do not add SQL or news logic here.
+4. Add tests, including rejected inputs in `tests/security/test_resource_budgets.py`.
+5. Update the schema file and [the tool reference](TOOLS.md):
 
-```bash
-uv run pytest tests/integration/test_mcp_client.py -q
-```
+   ```bash
+   uv run python -m stram_qualitative_mcp.tools.export_schema
+   ```
 
-It performs the entire workflow: chooses a loopback port, generates an ephemeral RSA key, signs a
-five-minute JWT with all four tool scopes, starts authenticated Streamable HTTP, initializes the
-official MCP client, lists the tools, calls `qual_search_news`, verifies a genuine synthetic-lake
-record and shuts down. The Data Interface and worker are real; only identity material is local and
-ephemeral.
-
-To keep a development server running, first create a local audit key and configure a local issuer.
-The issuer, audience and JWKS values must match the JWT exactly:
-
-```bash
-mkdir -p .local/audit
-umask 077
-openssl rand -out .local/audit.key 32
-export STRAM_QUAL_MCP_PARQUET_ROOT="$PWD/tests/fixtures/news/parquet"
-export STRAM_QUAL_MCP_AUDIT_DB="$PWD/.local/audit/audit.sqlite3"
-export STRAM_QUAL_MCP_AUDIT_KEY_FILE="$PWD/.local/audit.key"
-export STRAM_QUAL_MCP_ISSUER_URL="http://127.0.0.1:9000/"
-export STRAM_QUAL_MCP_RESOURCE_URL="http://127.0.0.1:8000/mcp"
-export STRAM_QUAL_MCP_JWKS_URL="http://127.0.0.1:9000/.well-known/jwks.json"
-export STRAM_QUAL_MCP_TENANT_ID="local-stram"
-export STRAM_QUAL_MCP_ALLOWED_HOSTS="127.0.0.1:8000"
-export STRAM_QUAL_MCP_ALLOW_INSECURE_HTTP=1
-uv run stram-qualitative-mcp
-```
-
-Expected: after the local issuer is reachable and returns at least one key, startup completes and
-`GET /health/ready` returns `{"status":"ready"}`. Insecure HTTP is accepted only for loopback test
-hosts. This console entry point is for development; the container entrypoint additionally enforces
-read-only mounts and non-root execution.
-
-## Connect an MCP consumer
-
-The endpoint is the configured resource URL ending in `/mcp`. Obtain a short-lived token from the
-approved issuer with the exact audience, tenant and required scope. Do not log or persist it in this
-repository.
-
-```python
-import os
-
-import httpx2
-from mcp import ClientSession
-from mcp.client.streamable_http import streamable_http_client
-
-
-async def read_catalog(endpoint: str) -> dict[str, object]:
-    token = os.environ["STRAM_QUAL_MCP_TEST_BEARER"]
-    async with (
-        httpx2.AsyncClient(headers={"Authorization": f"Bearer {token}"}, timeout=10) as http,
-        streamable_http_client(endpoint, http_client=http, terminate_on_close=False) as streams,
-        ClientSession(streams[0], streams[1]) as session,
-    ):
-        await session.initialize()
-        tools = await session.list_tools()
-        assert len(tools.tools) == 10
-        result = await session.call_tool("qual_describe_coverage", {})
-        if result.is_error or result.structured_content is None:
-            raise RuntimeError("qualitative call failed")
-        return result.structured_content
-```
-
-Scopes are `qual:discover`, `qual:read`, `qual:text` and `qual:analytics`; each tool needs only
-its documented scope. See [Tool reference](TOOLS.md). The client must treat structured content as data,
-including warnings and availability evidence, never as instructions.
-
-## Authentication configuration
-
-Production configuration requires all of these values:
-
-| Variable | Meaning |
-|---|---|
-| `STRAM_QUAL_MCP_ISSUER_URL` | Exact JWT issuer, HTTPS |
-| `STRAM_QUAL_MCP_RESOURCE_URL` | Exact MCP audience/resource URL, HTTPS |
-| `STRAM_QUAL_MCP_JWKS_URL` | Exact HTTPS JWKS endpoint |
-| `STRAM_QUAL_MCP_TENANT_ID` | One admitted tenant |
-| `STRAM_QUAL_MCP_ALLOWED_ALGORITHMS` | Reviewed asymmetric algorithms; default `RS256` |
-| `STRAM_QUAL_MCP_ALLOWED_HOSTS` | Comma-separated proxy-facing Host values, no wildcard |
-| `STRAM_QUAL_MCP_ALLOWED_ORIGINS` | Comma-separated browser origins, empty if unused |
-
-Tokens require `iss`, `aud`, `sub`, `client_id` or `azp`, tenant claim, `scope` or `scp`, `iat` and
-`exp`. `nbf` is validated when present. Missing, forged, expired, wrong-audience, wrong-tenant and
-insufficient-scope tokens fail closed.
-
-## Authorized the data host access
-
-**Not yet verified.** An approved M6 change must provide a dedicated rootless Podman service identity,
-read-only access to a Data Plane-owned lake view, an audit volume and separate HMAC key, a private
-proxy/network, non-production issuer client and immutable image digest. Operators must not reuse the
-pipeline's writable identity or change Data Plane ownership to make the MCP work.
-
-Before any staging action, complete [Deployment prerequisites](../deploy/README.md) and the M6
-checklist in [Operations](OPERATIONS.md#m6-staging-checklist). Record commands and results without
-capturing tokens, raw tool payloads, paths or unrestricted result data.
+**To move to a new `stram_data` release:** update the commit in `pyproject.toml`,
+`.github/workflows/ci.yml` and `tools/prepare_container_dependency.sh`. Update the version in
+`worker.py`, the `Dockerfile` and `tools/prepare_container_dependency.sh`. Then rename and refresh the
+snapshot in `contracts/`, point `tests/contract/test_data_interface_release.py` at it, and run
+`uv lock --upgrade-package stram-data`.
 
 ## Troubleshooting
 
-| Symptom | Check | Expected recovery |
+| Symptom | Likely cause | Fix |
 |---|---|---|
-| HTTP 401 | signature, issuer, audience, expiry, client/subject, tenant and JWKS reachability | Correct the test identity; never bypass verification |
-| Tool returns forbidden | tool scope in [Tool reference](TOOLS.md) | Request the narrow required scope |
-| HTTP 403 or 421 | configured Origin and Host | Fix proxy/client headers or allowlist through review |
-| Readiness 503 after worker failures | restart count and safe telemetry outcome | Stop admission, preserve evidence, restart only after cause is understood |
-| Deadline/overload tool error | query bounds, one-worker queue and configured deadlines | Narrow the query or retry later; do not auto-retry blindly |
-| Audit unavailable | audit volume, key match, chain verification and free space | Keep service out of rotation; preserve journal and key; follow incident runbook |
-| Preflight rejects mount | UID, root mount and lake mount options | Correct container/host mounts; never use an allow-writable override |
+| `uv sync` fails on `stram_data` | No access to the private repository | Run the `git ls-remote` check above and ask for access. Never put a token in a URL or the lockfile |
+| `Address already in use` | Another service has the port | `uv run python tools/dev_server.py --port 8775 --keys-port 8776`, then pass `--endpoint http://127.0.0.1:8775/mcp` to the client |
+| Client gets 401 | The token expired, or the server restarted | Each start makes a new key. Restart if needed, then use the new `.local/token` |
+| Client gets 421 | The URL's host differs from the allowed one | Use `127.0.0.1`, not `localhost` |
+| Readiness stays `not_ready` | The worker or audit failed to start | Read the server's output. If the audit check failed, stop it and delete `.local/` |
+| A tool returns `forbidden` | The token lacks that tool's scope | See [the tool reference](TOOLS.md). The local token has all four |
+| Tests fail on Windows | Linux-only isolation tests | Use WSL |
+| Connection refused | The server is not running | Start it, and wait for `{"status":"ready"}` |
 
-For recovery, key rotation and rollback, use [Operations](OPERATIONS.md).
+## Next
+
+- [How to consume](HOWTO_CONSUME.md) for using the tools well.
+- [Architecture](ARCHITECTURE.md) for how a request is handled.
+- [Deployment](../deploy/README.md) to run it on a server against real data.

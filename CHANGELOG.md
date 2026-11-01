@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Rewrite the documentation for first-time readers. Add `tools/dev_server.py`, `tools/try_client.py`
+  and `deploy/build_image.sh`, and remove the unused Docker unit and runtime example.
 - M3: replace the placeholder with real `qual_describe_coverage`, add `qual_get_news_timeline`, and pin
   `stram_data` 1.6.0.
 - M2: add `qual_get_article` and `qual_get_filings`, and pin `stram_data` 1.5.0. Fixtures move to

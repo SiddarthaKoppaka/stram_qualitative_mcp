@@ -1,9 +1,8 @@
 # Architecture
 
 This service is a thin, independently deployable MCP Tool Plane. It turns authenticated MCP requests
-into calls to the frozen public `stram_data.data_interface` 1.6.0 API. Qualitative semantics stay in
-the Data Plane; this repository adds no SQL, joins, financial formulas, availability calculations or
-write paths.
+into calls to the public `stram_data.data_interface` 1.6.0 API. News logic stays in the Data Plane;
+this repository adds no SQL, joins, ranking, scoring or write paths.
 
 ## Service topology
 
@@ -23,9 +22,9 @@ flowchart LR
     subgraph data[News Data Plane]
         I[public Data Interface 1.6.0]
         Q[DuckDB]
-        L[(read-only Parquet lake)]
+        L[(read-only Parquet and text)]
     end
-    C -->|private HTTPS| H --> A --> P
+    C -->|HTTP through a tunnel today, private HTTPS at M6| H --> A --> P
     P --> J
     P --> W --> I --> Q --> L
     H -. safe metadata only .-> O
@@ -89,8 +88,9 @@ flowchart TB
     B3 -. no token, kernel network syscalls denied .-> X[isolated worker]
 ```
 
-- Transport accepts only configured Host and Origin values and asymmetric JWT algorithms. Production
-  URLs require HTTPS. Signature, issuer, audience, expiry, issued-at, optional not-before, subject,
+- Transport accepts only configured Host and Origin values and asymmetric JWT algorithms. URLs
+  require HTTPS unless they are loopback and insecure HTTP is explicitly enabled, as in the
+  demonstration. Signature, issuer, audience, expiry, issued-at, optional not-before, subject,
   client, scope and tenant are validated. JWKS is warmed before readiness.
 - Policy requires one exact scope per tool and derives tenant only from verified claims. The rate
   limiter and worker admission structures are bounded.
@@ -99,10 +99,10 @@ flowchart TB
   tamper-evident, not protection against a host-root attacker; host-owned external checkpoints close
   that gap operationally.
 - The runtime image uses UID/GID 10001, a read-only root, dropped capabilities, no-new-privileges,
-  bounded tmpfs and a read-only lake bind. Container `serve` runs preflight before opening the server.
+  bounded tmpfs and read-only binds of `parquet` and `bodies`. Container `serve` runs preflight before opening the server.
 - The Linux worker's architecture-checked seccomp policy denies the socket syscall family and
   `io_uring` on reviewed `x86_64` and `aarch64`; unsupported Linux architectures fail worker startup.
-  Host egress policy still limits the separate HTTP process to approved identity/telemetry endpoints.
+  A host egress policy for the separate HTTP process is an M6 item.
 - Logs, traces and metrics use fixed allowlists. They exclude tokens, claims, raw arguments, raw
   results, paths, subjects and unbounded identifiers.
 
@@ -131,23 +131,30 @@ export failure is best-effort and does not block a safe read.
 
 ## Data semantics
 
-The wrapper preserves Data Interface results without semantic rewriting. `strict` is the default and
-uses source vintage or ingestion visibility. `estimated` exposes policy, evidence, uncovered periods
-and warnings. `ex_post` is rejected with `as_of` and is always labelled hindsight-only. Exact derived
-decimals serialize as strings. Revisions, missing values, quality flags, retractions, lineage IDs,
-availability evidence, truncation and caveats remain in the structured response.
+Cards report what the Data Interface returns, with three deliberate changes. `body_path` and
+`body_status` never leave the service. They become `text_available`, which is true only when text was
+fetched in full. Article text is named `untrusted_text`, with control and format characters removed.
+Every envelope carries `content_trust: "untrusted_external"`.
 
-The worker startup reports the exact `stram-data` version, interface version and availability-policy
-hash. A mismatch fails startup. Schemas and their SHA-256 hashes are checked into
+Search defaults to confidence 0.6 and hides flagged items. Limits are rejected, never clamped. An
+article is its latest version, with ticker links added up across versions.
+
+The worker reports the exact `stram-data` version, interface version and availability-policy hash at
+startup, and a mismatch fails startup. Schemas and their SHA-256 hashes are checked into
 `contracts/tool_schemas.json`.
+
+The Data Interface needs two News paths: the Parquet root and `bodies/` beside it. The worker passes
+the mounted Parquet root to both `parquet_root` and `news_parquet_root`, because the MCP does not read
+Quant data. The worker cannot reach PostgreSQL, so anything a tool needs must be in Parquet or the
+text files.
 
 ## Ownership map
 
 | Component | Owns | Must not own |
 |---|---|---|
 | MCP client/application | User intent and orchestration | Data calculations or direct lake access |
-| This repository | MCP transport, identity, policy, audit, isolation, safe serialization | SQL, data ingestion, finance logic, lake repair |
-| `stram_data.data_interface` | Queries, availability, revisions, lineage, analytics, bounds | MCP, authentication or orchestration |
+| This repository | MCP transport, identity, policy, audit, isolation, safe serialization | SQL, data ingestion, ranking, lake repair |
+| `stram_data.data_interface` | News queries, text reads, coverage, timelines, bounds | MCP, authentication or orchestration |
 | Data host operators | Identity, mounts, secrets, networking, image, backup and rollback | Ad hoc Data Plane mutation |
 
 See [Tool reference](TOOLS.md) for contracts, [Operations](OPERATIONS.md) for controls and

@@ -1,6 +1,6 @@
 # Stram Qualitative MCP: agent guidance
 
-This repository is the independently deployed MCP Tool Plane for Stram qualitative data.
+This repository is the independently deployed MCP Tool Plane for Stram's News & Intelligence data.
 
 - Read [PLANS.md](PLANS.md) before changing architecture or scope and follow the normative
   [engineering standards](ENGINEERING.md) for every change.
@@ -16,9 +16,7 @@ This repository is the independently deployed MCP Tool Plane for Stram qualitati
 - This repository is public. Fixtures must be synthetic; never commit article text, hosts,
   addresses or credentials.
 
-Knowledge-transfer references are in `../stram_data/docs/README.md`, especially ADR 002 and
-`docs/quant/DATA_INTERFACE.md`.
+Upstream references are in `stram_data`: `docs/news/`, ADR 002 and `docs/quant/DATA_INTERFACE.md`.
 
-Start repository work from [README.md](README.md). Architecture, onboarding, tool contracts and
-operations live under [docs/](docs/ARCHITECTURE.md); deployment prerequisites are in
-[deploy/README.md](deploy/README.md). Do not copy those details into this file.
+Start repository work from [README.md](README.md) and [docs/README.md](docs/README.md). Deployment
+steps are in [deploy/README.md](deploy/README.md). Do not copy those details into this file.

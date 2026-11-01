@@ -10,7 +10,7 @@ operability, then delivery speed**. Performance optimization comes after measure
 ## 1. Core engineering principles
 
 1. **Keep the Tool Plane thin.** The service MUST delegate qualitative behavior to the pinned public
-   `stram_data.data_interface`; it MUST NOT duplicate SQL, financial calculations, ingestion,
+   `stram_data.data_interface`; it MUST NOT duplicate SQL, ranking, scoring, ingestion,
    alignment, lineage, revision, or availability logic.
 2. **Fail closed at trust boundaries.** Missing or ambiguous identity, authorization, tenant, schema,
    policy, audit, or readiness state MUST deny the operation. Internal failures MUST NOT silently
