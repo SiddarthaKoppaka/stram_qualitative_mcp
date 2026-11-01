@@ -32,7 +32,7 @@ from stram_qualitative_mcp.errors import (
 
 DEFAULT_MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 DEFAULT_MEMORY_LIMIT_MB = 3072
-EXPECTED_STRAM_DATA_VERSION = "1.4.1"
+EXPECTED_STRAM_DATA_VERSION = "1.5.0"
 EXPECTED_INTERFACE_VERSION = "1"
 WorkerTarget = Callable[[Connection, str, int, int], None]
 

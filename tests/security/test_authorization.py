@@ -25,7 +25,7 @@ class CancellableWorker:
 
 def _settings(tmp_path: Path) -> AppSettings:
     return AppSettings(
-        parquet_root=Path(__file__).parents[1] / "fixtures/lake",
+        parquet_root=Path(__file__).parents[1] / "fixtures/news/parquet",
         audit_db_path=tmp_path / "audit.sqlite3",
         audit_key_path=tmp_path / "audit.key",
         issuer_url="http://testserver/issuer",

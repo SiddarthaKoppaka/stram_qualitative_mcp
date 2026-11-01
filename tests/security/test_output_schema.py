@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import uuid
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -35,6 +36,12 @@ def test_every_real_result_round_trips_through_its_output_contract(
             "start_date": "2026-10-01",
             "end_date": "2026-10-31",
         },
+        "qual_get_filings": {
+            "tickers": ["AAPL"],
+            "start_date": "2026-10-01",
+            "end_date": "2026-10-31",
+        },
+        "qual_get_article": {"article_id": str(uuid.uuid5(uuid.NAMESPACE_URL, "held-text"))},
     }
 
     for spec in TOOL_SPECS:

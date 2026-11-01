@@ -48,7 +48,7 @@ def preflight(
 ) -> int:
     """Verify the immutable runtime, read-only mounts, and public Data Interface."""
 
-    lake = Path(os.environ.get("STRAM_QUAL_MCP_PARQUET_ROOT", "/lake"))
+    lake = Path(os.environ.get("STRAM_QUAL_MCP_PARQUET_ROOT", "/news/parquet"))
     uid = os.geteuid() if effective_uid is None else effective_uid
     if uid == 0:
         raise RuntimeError("container must not run as root")
@@ -82,7 +82,7 @@ def preflight(
 async def worker_interface_probe() -> None:
     """Start the production worker boundary and call the real public Data Interface."""
 
-    lake = Path(os.environ.get("STRAM_QUAL_MCP_PARQUET_ROOT", "/lake"))
+    lake = Path(os.environ.get("STRAM_QUAL_MCP_PARQUET_ROOT", "/news/parquet"))
     worker = QueryWorker(lake)
     try:
         await worker.start()

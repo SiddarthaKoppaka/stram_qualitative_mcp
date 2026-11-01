@@ -1,15 +1,15 @@
 # Stram Qualitative MCP
 
 Stram Qualitative MCP is the read-only MCP Tool Plane for Stram's News & Intelligence data. It exposes
-the pinned `stram_data.data_interface` 1.4.1 API over authenticated Streamable HTTP. This repository
+the pinned `stram_data.data_interface` 1.5.0 API over authenticated Streamable HTTP. This repository
 owns transport, identity, authorization, bounds, worker isolation, audit and telemetry. It does not
 own SQL, ingestion, ranking, scoring, lake schemas or AI orchestration.
 
 It is built from [`stram_quant_mcp`](https://github.com/SiddarthaKoppaka/stram_quant_mcp) at commit
 `d191333` and keeps that service's security model.
 
-Status: M1. `qual_search_news` works on synthetic data, beside the placeholder
-`qual_describe_coverage`. Nothing is deployed. See [PLANS.md](PLANS.md).
+Status: M2. `qual_search_news`, `qual_get_filings` and `qual_get_article` work on synthetic data,
+beside the placeholder `qual_describe_coverage`. Nothing is deployed. See [PLANS.md](PLANS.md).
 
 ## Architecture in five minutes
 
@@ -20,7 +20,7 @@ flowchart LR
     A --> P[tenant, scope, rate and bounds]
     P --> J[(HMAC-chained audit)]
     P --> W[isolated query worker]
-    W --> I[stram_data.data_interface 1.4.1]
+    W --> I[stram_data.data_interface 1.5.0]
     I --> D[DuckDB over read-only Parquet]
     W -. no token, socket APIs blocked .-> I
 ```
@@ -33,18 +33,18 @@ the call closed. See [Architecture](docs/ARCHITECTURE.md) for the complete lifec
 ## Quick start
 
 Supported toolchain: CPython 3.12 through 3.14 and `uv`. The lock pins the exact `stram-data` source
-commit for release 1.4.1. Private repository access is needed only when the dependency is not already
+commit for release 1.5.0. Private repository access is needed only when the dependency is not already
 available in the local cache.
 
 ```bash
 uv sync --frozen --dev
-uv run python -c 'import stram_data; assert stram_data.__version__ == "1.4.1"'
+uv run python -c 'import stram_data; assert stram_data.__version__ == "1.5.0"'
 uv run pytest tests/integration/test_mcp_client.py -q
 ```
 
 The integration test starts the real server on loopback, signs a short-lived JWT, connects with the
 official MCP SDK client, discovers the tools and calls the real Data Interface against
-`tests/fixtures/lake`. It does not use production credentials or mocked qualitative responses.
+`tests/fixtures/news/parquet`. It does not use production credentials or mocked qualitative responses.
 
 Run the complete local gate:
 

@@ -1,6 +1,6 @@
 # Stram Qualitative MCP: plan
 
-Status on 2026-11-01: M0 and M1 are done. Nothing is deployed.
+Status on 2026-11-01: M0 to M2 are done. Nothing is deployed.
 
 This service gives agents read-only access to Stram's News & Intelligence data over MCP. It follows
 [`stram_quant_mcp`](https://github.com/SiddarthaKoppaka/stram_quant_mcp) and keeps its security model.
@@ -110,7 +110,7 @@ one clear job. There is no generic query, URL-fetch or file tool. The envelope m
 
 - Requires `article_id`. Optional `offset` (default 0) and `max_chars` (default 4,000, max 8,000), which
   covers the typical article: the sample median was 4,288 characters and the 90th percentile 8,551.
-- Returns the metadata, `text_status`, the `text` slice, `total_chars`, and `has_more`.
+- Returns the card, `text_available`, the `untrusted_text` slice, `total_chars`, and `has_more`.
 - When we hold no text it returns the metadata and `text_available=false`. This is a normal result.
 
 ### `qual_get_news_timeline`
@@ -169,23 +169,19 @@ These facts come from the live data on 2026-11-01. Tool output must not suggest 
 
 ## 6. Required `stram_data` work
 
-Every item adds to the Data Interface and needs a new contract baseline. These go in `stram_data`
+M2's additions shipped in `stram_data` 1.5.0. Every item left adds to the Data Interface and needs a new contract baseline. These go in `stram_data`
 pull requests, and the Data Interface needs Sid's review.
 
 | Item | Change | Needed by |
 |---|---|---|
-| Text | `get_news_text(article_id)`, with paths confined to the News root | M2 |
-| Filings | `form` and `items` on rows, and a `forms` filter | M2 |
-| Out of memory | Map DuckDB's out-of-memory error to `DataUnavailableError` | M2 |
-| SEC text | Decide where it is read from; see below | M2 |
 | Coverage | `get_news_coverage()` | M3 |
 | Timeline | `get_news_timeline(NewsTimelineQuery)` | M3 |
 | Stories | `story_id` and copy counts from Parquet | M4 |
 
 **SEC text.** All 3,936 SEC announcements say `fetched`, but none has a `body_path`. They hold a
-500-character summary, and the full document appears to be only in the raw archive, which this plan
-does not expose. M2 confirms that, then either writes SEC text to `bodies/` or returns the summary with
-`text_available=false`.
+500-character summary, and the full document is only in the raw archive, which this plan does not
+expose. M2 returns the summary with `text_available=false`. Writing that text to `bodies/` is a later
+pipeline job.
 
 **Stories.** `article_stories` is only in PostgreSQL. M4 reproduces the `news_data.story_id` rule in
 `NewsLake` and tests it against PostgreSQL on a sample, so nothing has to be rewritten in the lake.
@@ -226,7 +222,12 @@ Implement one reviewed milestone at a time and record evidence here.
 | M5 | Real lake on the data host, loopback only | Budgets in section 9 met on the live lake; pipelines unaffected |
 | M6 | Staging with Keycloak | Quant's M6 acceptance checks pass for this service |
 
-M2 is next, and needs `stram_data` 1.5.
+M3 is next.
+
+**M2 evidence (2026-11-01).** On `stram_data` 1.5.0 (`ff8b151`), `qual_get_article` and
+`qual_get_filings` pass through the official MCP client on synthetic data. Through the isolated worker
+on the live lake, read-only: filings 0.2 s, article about 1.6 s. Paged text, missing text and SEC
+summaries all behave as specified. Only `fetched` counts as text we hold.
 
 **M0 evidence (2026-11-01).** Copied from `stram_quant_mcp` at `d191333`, pinned to `stram_data` 1.4.1
 (`4e9fe24`). Tests ran on Linux, on the data host, from a throwaway copy using Python 3.13.

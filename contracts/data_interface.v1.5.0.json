@@ -1,8 +1,8 @@
 {
-  "baseline_sha256": "84b9b17d7f7fe60d774b62bd0099c535620135f2779f68a0722504f98db2e442",
+  "baseline_sha256": "356e1ffcb2bcc16f312e2eff4dd0bab01c764149b965b0af9571520ee4ce33c6",
   "interface_version": "1",
-  "package_commit": "4e9fe241a239fd488e5a356fd064ac7a209b0c9e",
-  "package_version": "1.4.1",
+  "package_commit": "ff8b1515b4de5435e457a1bba4ab0705f6bb2c5d",
+  "package_version": "1.5.0",
   "public_methods": [
     "describe_availability_policies",
     "get_aligned_panel",
@@ -12,6 +12,7 @@
     "get_freshness",
     "get_lineage",
     "get_news",
+    "get_news_text",
     "get_series",
     "list_indicator_subjects",
     "list_indicators"
@@ -43,6 +44,7 @@
     "NewsQuery",
     "NewsResult",
     "NewsRow",
+    "NewsText",
     "NewsTicker",
     "NotFoundError",
     "PanelCell",

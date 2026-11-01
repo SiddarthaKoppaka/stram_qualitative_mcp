@@ -7,7 +7,7 @@ audit retention and rollback are **not yet verified** and require an authorized 
 
 ## Build and release gates
 
-Use the frozen lock and exact `stram-data` 1.4.1 pin:
+Use the frozen lock and exact `stram-data` 1.5.0 pin:
 
 ```bash
 uv sync --frozen --dev

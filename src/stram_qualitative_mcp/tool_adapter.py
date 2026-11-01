@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import unicodedata
+from datetime import UTC, datetime, timedelta
 
 import stram_data
 from pydantic import BaseModel, ValidationError
@@ -19,10 +21,17 @@ from stram_data.data_interface import (
 from stram_qualitative_mcp.errors import ToolInputError, ToolNotFoundError, ToolUnavailableError
 from stram_qualitative_mcp.tool_models import (
     HISTORY_INGESTED_FROM,
+    MAX_SPAN_DAYS,
+    ArticleData,
+    ArticleInput,
     CoverageData,
+    FilingCard,
+    FilingsData,
+    FilingsInput,
     NewsCard,
     NewsSearchData,
     NewsSearchInput,
+    text_available,
 )
 from stram_qualitative_mcp.tool_registry import TOOLS_BY_NAME
 from stram_qualitative_mcp.version import __version__
@@ -74,6 +83,10 @@ class QualToolAdapter:
             return CoverageData(policies=self._data.describe_availability_policies())
         if isinstance(request, NewsSearchInput):
             return self._search_news(request)
+        if isinstance(request, FilingsInput):
+            return self._filings(request)
+        if isinstance(request, ArticleInput):
+            return self._article(request)
         raise ToolInputError
 
     def _search_news(self, request: NewsSearchInput) -> NewsSearchData:
@@ -86,6 +99,60 @@ class QualToolAdapter:
             as_of=result.as_of,
             availability_note=result.availability_note,
         )
+
+    def _filings(self, request: FilingsInput) -> FilingsData:
+        result = self._data.get_news(
+            NewsQuery(
+                start_date=request.start_date,
+                end_date=request.end_date,
+                tickers=request.tickers,
+                providers=("sec",),
+                forms=request.forms,
+                limit=request.limit,
+            )
+        )
+        return FilingsData(
+            rows=tuple(FilingCard.from_row(row) for row in result.rows),
+            count=result.count,
+            limit=result.limit,
+            truncated=result.truncated,
+        )
+
+    def _article(self, request: ArticleInput) -> ArticleData:
+        stored = self._data.get_news_text(request.article_id)  # raises for an unknown article
+        end = datetime.now(UTC).date() + timedelta(days=1)
+        rows = self._data.get_news(
+            NewsQuery(
+                start_date=end - timedelta(days=MAX_SPAN_DAYS),
+                end_date=end,
+                article_ids=(request.article_id,),
+                include_flagged=True,
+                limit=1,
+            )
+        ).rows
+        if not rows:
+            raise ToolNotFoundError
+        available = text_available(rows[0]) and stored.text is not None
+        text = _strip_invisible(stored.text or "") if available else ""
+        window = text[request.offset : request.offset + request.max_chars]
+        return ArticleData(
+            article=NewsCard.from_row(rows[0]),
+            text_available=available,
+            untrusted_text=window if available else None,
+            offset=request.offset,
+            total_chars=len(text),
+            has_more=request.offset + request.max_chars < len(text),
+        )
+
+
+def _strip_invisible(text: str) -> str:
+    """Drop control and format characters. This reduces hidden text; it does not make text safe."""
+
+    return "".join(
+        character
+        for character in text
+        if character in "\n\t" or unicodedata.category(character) not in {"Cc", "Cf", "Cs"}
+    )
 
 
 def _warnings(data: BaseModel) -> tuple[str, ...]:

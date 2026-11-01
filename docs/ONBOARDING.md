@@ -13,8 +13,8 @@ staging or production access and must not be run without separate authorization.
 - For a long-running authenticated server, an OAuth/OIDC issuer that provides asymmetric JWTs and a
   reachable JWKS endpoint. Local automated integration generates an ephemeral test identity instead.
 
-The exact runtime dependency is `stram-data` 1.4.1 at Git commit
-`4e9fe241a239fd488e5a356fd064ac7a209b0c9e`; `uv.lock` is authoritative.
+The exact runtime dependency is `stram-data` 1.5.0 at Git commit
+`ff8b1515b4de5435e457a1bba4ab0705f6bb2c5d`; `uv.lock` is authoritative.
 
 ## Local development
 
@@ -22,7 +22,7 @@ From the repository root:
 
 ```bash
 uv sync --frozen --dev
-uv run python -c 'import stram_data; assert stram_data.__version__ == "1.4.1"'
+uv run python -c 'import stram_data; assert stram_data.__version__ == "1.5.0"'
 uv run python -m stram_qualitative_mcp.tools.export_schema --check
 ```
 
@@ -38,7 +38,7 @@ uv run pytest tests/integration/test_read_tools.py tests/integration/test_analyt
 ```
 
 Expected: the contract pin, the news search tool, and the security, worker and telemetry suites pass
-against `tests/fixtures/lake`.
+against `tests/fixtures/news/parquet`.
 
 ## Start and connect with a test identity
 
@@ -61,7 +61,7 @@ The issuer, audience and JWKS values must match the JWT exactly:
 mkdir -p .local/audit
 umask 077
 openssl rand -out .local/audit.key 32
-export STRAM_QUAL_MCP_PARQUET_ROOT="$PWD/tests/fixtures/lake"
+export STRAM_QUAL_MCP_PARQUET_ROOT="$PWD/tests/fixtures/news/parquet"
 export STRAM_QUAL_MCP_AUDIT_DB="$PWD/.local/audit/audit.sqlite3"
 export STRAM_QUAL_MCP_AUDIT_KEY_FILE="$PWD/.local/audit.key"
 export STRAM_QUAL_MCP_ISSUER_URL="http://127.0.0.1:9000/"

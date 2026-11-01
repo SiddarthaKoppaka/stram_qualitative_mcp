@@ -8,7 +8,7 @@ import pytest
 from stram_qualitative_mcp.worker import QueryWorker
 
 ROOT = Path(__file__).parents[2]
-LAKE = ROOT / "tests/fixtures/lake"
+LAKE = ROOT / "tests/fixtures/news/parquet"
 
 
 def inventory() -> dict[str, str]:

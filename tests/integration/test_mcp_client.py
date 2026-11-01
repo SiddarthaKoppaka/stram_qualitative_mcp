@@ -30,7 +30,7 @@ async def test_official_client_lists_and_calls_real_streamable_http_tools(tmp_pa
     port = _free_port()
     endpoint = f"http://127.0.0.1:{port}/mcp"
     settings = AppSettings(
-        parquet_root=Path(__file__).parents[1] / "fixtures/lake",
+        parquet_root=Path(__file__).parents[1] / "fixtures/news/parquet",
         audit_db_path=tmp_path / "audit.sqlite3",
         audit_key_path=tmp_path / "audit.key",
         issuer_url="http://127.0.0.1/issuer",
@@ -50,7 +50,7 @@ async def test_official_client_lists_and_calls_real_streamable_http_tools(tmp_pa
             "sub": "researcher-1",
             "client_id": "qual-client",
             "tenant_id": "stram",
-            "scope": "qual:discover qual:read",
+            "scope": "qual:discover qual:read qual:text",
             "iat": now - 1,
             "exp": now + 300,
         },
@@ -108,7 +108,7 @@ async def test_official_client_lists_and_calls_real_streamable_http_tools(tmp_pa
             )
 
         assert initialized.server_info.name == "stram-qualitative"
-        assert len(listed.tools) == 2
+        assert len(listed.tools) == 4
         assert all(tool.annotations and tool.annotations.read_only_hint for tool in listed.tools)
         assert result.is_error is False
         assert result.structured_content is not None

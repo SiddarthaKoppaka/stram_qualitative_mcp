@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: SiddarthaKoppaka/stram_data
-          ref: 4e9fe241a239fd488e5a356fd064ac7a209b0c9e # pragma: allowlist secret; public commit
+          ref: ff8b1515b4de5435e457a1bba4ab0705f6bb2c5d # pragma: allowlist secret; public commit
           token: ${{ secrets.STRAM_DATA_READ_TOKEN }}
           path: stram_data
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
@@ -62,7 +62,7 @@ jobs:
           test "$(docker image inspect stram-qualitative-mcp:test --format '{{.Config.User}}')" = "10001:10001"
           test "$(docker image inspect stram-qualitative-mcp:test --format '{{index .Config.Labels "org.opencontainers.image.base.digest"}}')" = "sha256:593bd06efe90efa80dc4eee3948be7c0fde4134606dd40d8dd8dbcade98e669c"
           docker run --rm --read-only --tmpfs /tmp:rw,noexec,nosuid,nodev,size=64m --cap-drop ALL --security-opt no-new-privileges stram-qualitative-mcp:test worker-network-probe
-          docker run --rm --read-only --network none --cap-drop ALL --security-opt no-new-privileges --mount type=bind,src="$GITHUB_WORKSPACE/tests/fixtures/lake",dst=/lake,readonly --tmpfs /tmp:rw,noexec,nosuid,nodev,size=64m stram-qualitative-mcp:test worker-interface-probe
-          docker run --rm --read-only --network none --cap-drop ALL --security-opt no-new-privileges --mount type=bind,src="$GITHUB_WORKSPACE/tests/fixtures/lake",dst=/lake,readonly --tmpfs /tmp:rw,noexec,nosuid,nodev,size=64m stram-qualitative-mcp:test preflight
+          docker run --rm --read-only --network none --cap-drop ALL --security-opt no-new-privileges --mount type=bind,src="$GITHUB_WORKSPACE/tests/fixtures/news",dst=/news,readonly --tmpfs /tmp:rw,noexec,nosuid,nodev,size=64m stram-qualitative-mcp:test worker-interface-probe
+          docker run --rm --read-only --network none --cap-drop ALL --security-opt no-new-privileges --mount type=bind,src="$GITHUB_WORKSPACE/tests/fixtures/news",dst=/news,readonly --tmpfs /tmp:rw,noexec,nosuid,nodev,size=64m stram-qualitative-mcp:test preflight
       - name: Image vulnerability gate
         run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.68.1@sha256:a93fd67162843c0f749002af9245fe9a2e5edc41445bd71d3949c803e95ef05b image --scanners vuln --ignore-unfixed --severity HIGH,CRITICAL --format json stram-qualitative-mcp:test | uv run python tools/check_trivy_scan.py

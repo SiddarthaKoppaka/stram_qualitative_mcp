@@ -40,7 +40,9 @@ def test_filters_can_widen_the_defaults(tool_adapter: QualToolAdapter) -> None:
 
 def test_text_and_provider_filters_work_without_tickers(tool_adapter: QualToolAdapter) -> None:
     assert _titles(_search(tool_adapter, text="tariffs")) == ["Synthetic Apple supplier update"]
-    assert _titles(_search(tool_adapter, providers=["sec"])) == ["Synthetic 8-K announcement"]
+    assert _titles(_search(tool_adapter, providers=["sec"], tickers=["AAPL"])) == [
+        "Synthetic 8-K announcement"
+    ]
 
 
 def test_text_available_requires_a_stored_body(tool_adapter: QualToolAdapter) -> None:
@@ -50,12 +52,17 @@ def test_text_available_requires_a_stored_body(tool_adapter: QualToolAdapter) ->
     assert rows["Synthetic backfilled story"].text_available is False  # pending
 
 
+def test_stored_text_from_a_paywalled_page_is_not_offered(tool_adapter: QualToolAdapter) -> None:
+    row = _search(tool_adapter, tickers=["TSLA"]).rows[0]
+    assert row.text_available is False
+
+
 def test_cards_never_expose_storage_paths_or_body_status(tool_adapter: QualToolAdapter) -> None:
     envelope = tool_adapter.execute(
         "qual_search_news", {**OCTOBER, "tickers": ["AAPL"]}, "no-paths"
     )
     serialized = json.dumps(envelope.model_dump(mode="json"))
-    assert "held-text.txt" not in serialized
+    assert ".jsonl" not in serialized
     assert "body_path" not in serialized
     assert "body_status" not in serialized
     assert "pending" not in serialized

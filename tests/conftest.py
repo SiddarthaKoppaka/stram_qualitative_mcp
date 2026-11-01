@@ -8,7 +8,7 @@ from stram_data.data_interface import DataInterface
 from stram_qualitative_mcp.tool_adapter import QualToolAdapter
 
 ROOT = Path(__file__).parent.parent
-SYNTHETIC_LAKE = ROOT / "tests/fixtures/lake"
+SYNTHETIC_LAKE = ROOT / "tests/fixtures/news/parquet"
 
 
 @pytest.fixture

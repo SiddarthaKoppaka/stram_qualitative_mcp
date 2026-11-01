@@ -17,7 +17,7 @@ RUN sed -i \
 WORKDIR /build
 COPY pyproject.toml uv.lock README.md ./
 COPY src ./src
-COPY vendor/stram_data-1.4.1-py3-none-any.whl /wheels/stram_data-1.4.1-py3-none-any.whl
+COPY vendor/stram_data-1.5.0-py3-none-any.whl /wheels/stram_data-1.5.0-py3-none-any.whl
 RUN uv export --frozen --no-dev --no-emit-project \
       --no-emit-package stram-data --no-emit-package confluent-kafka \
       --no-emit-package httpx --no-emit-package psycopg-binary \
@@ -26,9 +26,9 @@ RUN uv export --frozen --no-dev --no-emit-project \
     && uv pip install --python /opt/venv/bin/python \
       --requirements /tmp/runtime-requirements.txt \
     && uv pip install --python /opt/venv/bin/python --no-deps \
-      /wheels/stram_data-1.4.1-py3-none-any.whl . \
+      /wheels/stram_data-1.5.0-py3-none-any.whl . \
     && /opt/venv/bin/python -c \
-      'import stram_data; assert stram_data.__version__ == "1.4.1"'
+      'import stram_data; assert stram_data.__version__ == "1.5.0"'
 
 FROM ${PYTHON_BASE} AS runtime
 
@@ -59,7 +59,7 @@ ENV PATH="/opt/venv/bin:${PATH}" \
     PYTHONUNBUFFERED=1 \
     STRAM_QUAL_MCP_BIND_HOST=0.0.0.0 \
     STRAM_QUAL_MCP_BIND_PORT=8000 \
-    STRAM_QUAL_MCP_PARQUET_ROOT=/lake
+    STRAM_QUAL_MCP_PARQUET_ROOT=/news/parquet
 USER 10001:10001
 WORKDIR /nonexistent
 EXPOSE 8000

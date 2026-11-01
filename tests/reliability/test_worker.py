@@ -16,7 +16,7 @@ from stram_qualitative_mcp.worker import QueryWorker
 from tests.support.worker_target import controlled_worker, network_probe_worker
 
 ROOT = Path(__file__).parents[2]
-LAKE = ROOT / "tests/fixtures/lake"
+LAKE = ROOT / "tests/fixtures/news/parquet"
 
 
 @pytest.mark.asyncio
