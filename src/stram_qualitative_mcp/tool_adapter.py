@@ -15,13 +15,16 @@ from stram_data.data_interface import (
     DataUnavailableError,
     InvalidQueryError,
     NewsQuery,
+    NewsTimelineQuery,
     NotFoundError,
 )
 
 from stram_qualitative_mcp.errors import ToolInputError, ToolNotFoundError, ToolUnavailableError
 from stram_qualitative_mcp.tool_models import (
+    COVERAGE_LIMITATIONS,
     HISTORY_INGESTED_FROM,
     MAX_SPAN_DAYS,
+    TONE_NOTE,
     ArticleData,
     ArticleInput,
     CoverageData,
@@ -31,6 +34,9 @@ from stram_qualitative_mcp.tool_models import (
     NewsCard,
     NewsSearchData,
     NewsSearchInput,
+    TimelineData,
+    TimelineInput,
+    TimelineRow,
     text_available,
 )
 from stram_qualitative_mcp.tool_registry import TOOLS_BY_NAME
@@ -80,14 +86,46 @@ class QualToolAdapter:
 
     def _dispatch(self, tool_name: str, request: BaseModel) -> BaseModel:
         if tool_name == "qual_describe_coverage":
-            return CoverageData(policies=self._data.describe_availability_policies())
+            return self._coverage()
         if isinstance(request, NewsSearchInput):
             return self._search_news(request)
         if isinstance(request, FilingsInput):
             return self._filings(request)
         if isinstance(request, ArticleInput):
             return self._article(request)
+        if isinstance(request, TimelineInput):
+            return self._timeline(request)
         raise ToolInputError
+
+    def _coverage(self) -> CoverageData:
+        coverage = self._data.get_news_coverage()
+        return CoverageData(
+            providers=coverage.providers,
+            tracked_tickers=coverage.tracked_tickers,
+            missing_gdelt_slots=coverage.missing_gdelt_slots,
+            missing_gdelt_slot_count=coverage.missing_gdelt_slot_count,
+            gdelt_window_days=coverage.gdelt_window_days,
+            limitations=COVERAGE_LIMITATIONS,
+        )
+
+    def _timeline(self, request: TimelineInput) -> TimelineData:
+        rows = self._data.get_news_timeline(
+            NewsTimelineQuery.model_validate(request.model_dump())
+        ).rows
+        return TimelineData(
+            rows=tuple(
+                TimelineRow(
+                    ticker=row.ticker,
+                    day=row.day,
+                    articles=row.articles,
+                    gdelt_article_tone=row.mean_tone,
+                    tone_articles=row.tone_articles,
+                )
+                for row in rows
+            ),
+            count=len(rows),
+            tone_note=TONE_NOTE,
+        )
 
     def _search_news(self, request: NewsSearchInput) -> NewsSearchData:
         result = self._data.get_news(NewsQuery.model_validate(request.model_dump()))

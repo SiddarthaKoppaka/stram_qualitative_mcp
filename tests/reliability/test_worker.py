@@ -30,7 +30,7 @@ async def test_real_worker_calls_the_pinned_interface_and_shuts_down() -> None:
         10.0,
     )
     data = result["data"]
-    assert isinstance(data, dict) and data["policies"]
+    assert isinstance(data, dict) and data["providers"]
     pid = worker.pid
     assert pid is not None and worker.ready
     assert worker.dependency_versions_match

@@ -1,6 +1,6 @@
 # Stram Qualitative MCP: plan
 
-Status on 2026-11-01: M0 to M2 are done. Nothing is deployed.
+Status on 2026-11-01: M0 to M3 are done. Nothing is deployed.
 
 This service gives agents read-only access to Stram's News & Intelligence data over MCP. It follows
 [`stram_quant_mcp`](https://github.com/SiddarthaKoppaka/stram_quant_mcp) and keeps its security model.
@@ -116,8 +116,8 @@ one clear job. There is no generic query, URL-fetch or file tool. The envelope m
 ### `qual_get_news_timeline`
 
 - Requires 1 to 5 `tickers`, `start_date` and `end_date`, with a span up to 366 days.
-- Returns per ticker and UTC day: articles, stories and mean tone, with the number of articles behind
-  that mean. Days without articles are absent rather than zero.
+- Returns per ticker and UTC day: articles and mean tone, with the number of articles behind that
+  mean. M4 adds stories. Days without articles are absent rather than zero.
 - Tone is GDELT's score for a whole article. It is labelled `gdelt_article_tone`, and is not sentiment
   about the company.
 
@@ -169,13 +169,11 @@ These facts come from the live data on 2026-11-01. Tool output must not suggest 
 
 ## 6. Required `stram_data` work
 
-M2's additions shipped in `stram_data` 1.5.0. Every item left adds to the Data Interface and needs a new contract baseline. These go in `stram_data`
+M2's and M3's additions shipped in `stram_data` 1.5.0 and 1.6.0. Every item left adds to the Data Interface and needs a new contract baseline. These go in `stram_data`
 pull requests, and the Data Interface needs Sid's review.
 
 | Item | Change | Needed by |
 |---|---|---|
-| Coverage | `get_news_coverage()` | M3 |
-| Timeline | `get_news_timeline(NewsTimelineQuery)` | M3 |
 | Stories | `story_id` and copy counts from Parquet | M4 |
 
 **SEC text.** All 3,936 SEC announcements say `fetched`, but none has a `body_path`. They hold a
@@ -222,7 +220,13 @@ Implement one reviewed milestone at a time and record evidence here.
 | M5 | Real lake on the data host, loopback only | Budgets in section 9 met on the live lake; pipelines unaffected |
 | M6 | Staging with Keycloak | Quant's M6 acceptance checks pass for this service |
 
-M3 is next.
+M4 is next.
+
+**M3 evidence (2026-11-01).** On `stram_data` 1.6.0 (`947e49b`), all five tools pass through the official
+MCP client on synthetic data. Through the isolated worker on the live lake, read-only: coverage 1.2 s,
+AAPL October timeline 0.9 s, 5 tickers over a year 2.5 s. The AAPL October total matches search at
+1,412 articles. Only 33 of them carry tone at confidence 0.6, because most GDELT links for AAPL sit
+just under it, so `tone_articles` is returned with every mean.
 
 **M2 evidence (2026-11-01).** On `stram_data` 1.5.0 (`ff8b151`), `qual_get_article` and
 `qual_get_filings` pass through the official MCP client on synthetic data. Through the isolated worker

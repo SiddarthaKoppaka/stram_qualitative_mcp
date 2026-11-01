@@ -8,6 +8,7 @@ from stram_qualitative_mcp.tool_models import (
     EmptyInput,
     FilingsInput,
     NewsSearchInput,
+    TimelineInput,
 )
 
 OCTOBER = {"start_date": "2026-10-01", "end_date": "2026-10-31"}
@@ -72,6 +73,21 @@ def test_article_bounds_are_rejected_not_clamped(payload: dict[str, object]) -> 
 def test_filing_bounds_are_rejected_not_clamped(payload: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
         FilingsInput.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {**OCTOBER},
+        {**OCTOBER, "tickers": []},
+        {**OCTOBER, "tickers": [f"T{i}" for i in range(6)]},
+        {**OCTOBER, "tickers": ["AAPL"], "min_confidence": -0.1},
+        {"start_date": "2025-01-01", "end_date": "2026-10-31", "tickers": ["AAPL"]},
+    ],
+)
+def test_timeline_bounds_are_rejected_not_clamped(payload: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        TimelineInput.model_validate(payload)
 
 
 def test_search_defaults_are_the_planned_ones() -> None:

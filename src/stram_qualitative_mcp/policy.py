@@ -250,7 +250,15 @@ def _result_size(data: JsonValue | None) -> tuple[int | None, bool | None]:
         return None, None
     count = data.get("count", data.get("event_count"))
     if not isinstance(count, int):
-        for field in ("rows", "entries", "indicators", "subjects", "policies", "datasets"):
+        for field in (
+            "rows",
+            "providers",
+            "entries",
+            "indicators",
+            "subjects",
+            "policies",
+            "datasets",
+        ):
             items = data.get(field)
             if isinstance(items, list):
                 count = len(items)

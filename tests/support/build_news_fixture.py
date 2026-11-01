@@ -88,6 +88,7 @@ def items() -> list[NewsItem]:
             _day(19, 13),
             (("AAPL", 0.4),),
             provider="gdelt",
+            metadata={"tone": 1.5},
         ),
         _item(
             "farm",

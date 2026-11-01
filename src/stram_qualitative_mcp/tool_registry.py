@@ -17,6 +17,8 @@ from stram_qualitative_mcp.tool_models import (
     FilingsInput,
     NewsSearchEnvelope,
     NewsSearchInput,
+    TimelineEnvelope,
+    TimelineInput,
 )
 
 
@@ -54,7 +56,7 @@ class ToolSpec:
 TOOL_SPECS = (
     ToolSpec(
         "qual_describe_coverage",
-        "Describe the availability policies in force. A placeholder until coverage is built.",
+        "Describe news sources, date ranges, text coverage, tracked tickers and known gaps.",
         "qual:discover",
         EmptyInput,
         CoverageEnvelope,
@@ -83,6 +85,14 @@ TOOL_SPECS = (
         ArticleInput,
         ArticleEnvelope,
         10.0,
+    ),
+    ToolSpec(
+        "qual_get_news_timeline",
+        "Count articles per ticker and UTC day, with mean GDELT article tone.",
+        "qual:analytics",
+        TimelineInput,
+        TimelineEnvelope,
+        15.0,
     ),
 )
 

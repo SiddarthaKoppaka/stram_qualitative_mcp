@@ -1,7 +1,7 @@
 # Architecture
 
 This service is a thin, independently deployable MCP Tool Plane. It turns authenticated MCP requests
-into calls to the frozen public `stram_data.data_interface` 1.5.0 API. Qualitative semantics stay in
+into calls to the frozen public `stram_data.data_interface` 1.6.0 API. Qualitative semantics stay in
 the Data Plane; this repository adds no SQL, joins, financial formulas, availability calculations or
 write paths.
 
@@ -21,7 +21,7 @@ flowchart LR
         O[logs, traces, metrics]
     end
     subgraph data[News Data Plane]
-        I[public Data Interface 1.5.0]
+        I[public Data Interface 1.6.0]
         Q[DuckDB]
         L[(read-only Parquet lake)]
     end

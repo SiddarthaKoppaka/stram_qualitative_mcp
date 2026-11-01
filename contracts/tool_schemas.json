@@ -7,7 +7,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "description": "Describe the availability policies in force. A placeholder until coverage is built.",
+      "description": "Describe news sources, date ranges, text coverage, tracked tickers and known gaps.",
       "inputSchema": {
         "additionalProperties": false,
         "description": "Closed empty input for parameterless tools.",
@@ -20,129 +20,103 @@
         "$defs": {
           "CoverageData": {
             "additionalProperties": false,
-            "description": "M0 placeholder: M3 replaces this with per-source coverage.",
+            "description": "What the lake holds, and what callers must not assume about it.",
             "properties": {
-              "policies": {
+              "gdelt_window_days": {
+                "title": "Gdelt Window Days",
+                "type": "integer"
+              },
+              "limitations": {
                 "items": {
-                  "$ref": "#/$defs/PolicyInfo"
+                  "type": "string"
                 },
-                "title": "Policies",
+                "title": "Limitations",
+                "type": "array"
+              },
+              "missing_gdelt_slot_count": {
+                "title": "Missing Gdelt Slot Count",
+                "type": "integer"
+              },
+              "missing_gdelt_slots": {
+                "items": {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "title": "Missing Gdelt Slots",
+                "type": "array"
+              },
+              "providers": {
+                "items": {
+                  "$ref": "#/$defs/NewsProviderCoverage"
+                },
+                "title": "Providers",
+                "type": "array"
+              },
+              "tracked_tickers": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Tracked Tickers",
                 "type": "array"
               }
             },
             "required": [
-              "policies"
+              "providers",
+              "tracked_tickers",
+              "missing_gdelt_slots",
+              "missing_gdelt_slot_count",
+              "gdelt_window_days",
+              "limitations"
             ],
             "title": "CoverageData",
             "type": "object"
           },
-          "PolicyInfo": {
+          "NewsProviderCoverage": {
             "additionalProperties": false,
+            "description": "Article counts are approximate; records count every stored version.",
             "properties": {
-              "applies_to": {
-                "title": "Applies To",
+              "articles": {
+                "title": "Articles",
+                "type": "integer"
+              },
+              "articles_with_text": {
+                "title": "Articles With Text",
+                "type": "integer"
+              },
+              "first_published_at": {
+                "format": "date-time",
+                "title": "First Published At",
                 "type": "string"
               },
-              "basis": {
-                "title": "Basis",
+              "last_ingested_at": {
+                "format": "date-time",
+                "title": "Last Ingested At",
                 "type": "string"
               },
-              "calendar_coverage": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "default": null,
-                "title": "Calendar Coverage"
-              },
-              "enabled": {
-                "default": true,
-                "title": "Enabled",
-                "type": "boolean"
-              },
-              "evidence": {
-                "default": "modeled_delay",
-                "enum": [
-                  "verified_vintage",
-                  "official_schedule",
-                  "modeled_delay",
-                  "ingestion_bound",
-                  "hindsight"
-                ],
-                "title": "Evidence",
+              "last_published_at": {
+                "format": "date-time",
+                "title": "Last Published At",
                 "type": "string"
               },
-              "kind": {
-                "enum": [
-                  "estimated_policy",
-                  "source_vintage",
-                  "ingestion_upper_bound",
-                  "ex_post"
-                ],
-                "title": "Kind",
+              "provider": {
+                "title": "Provider",
                 "type": "string"
               },
-              "note": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "default": null,
-                "title": "Note"
-              },
-              "parameters": {
-                "additionalProperties": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "integer"
-                    }
-                  ]
-                },
-                "title": "Parameters",
-                "type": "object"
-              },
-              "policy_id": {
-                "title": "Policy Id",
-                "type": "string"
-              },
-              "sources": {
-                "default": [],
-                "items": {
-                  "type": "string"
-                },
-                "title": "Sources",
-                "type": "array"
-              },
-              "verified": {
-                "title": "Verified",
-                "type": "boolean"
-              },
-              "version": {
-                "title": "Version",
-                "type": "string"
+              "records": {
+                "title": "Records",
+                "type": "integer"
               }
             },
             "required": [
-              "policy_id",
-              "version",
-              "applies_to",
-              "kind",
-              "verified",
-              "basis",
-              "parameters"
+              "provider",
+              "records",
+              "articles",
+              "articles_with_text",
+              "first_published_at",
+              "last_published_at",
+              "last_ingested_at"
             ],
-            "title": "PolicyInfo",
+            "title": "NewsProviderCoverage",
             "type": "object"
           }
         },
@@ -197,7 +171,7 @@
         "title": "ToolEnvelope[CoverageData]",
         "type": "object"
       },
-      "schemaHash": "12ce24497f0b89a3e164893835f16ad396837c7ef8c1f7e81b3dae9b37137515",
+      "schemaHash": "e13a7780035e59d019c2fe48ae63957aab81afe8627f7704455210284b65b25f",
       "scope": "qual:discover"
     },
     {
@@ -1073,6 +1047,188 @@
       },
       "schemaHash": "8ad8328ffc1e6b8e015825e387cb3bb48cdbb8bee67196770727ccea15af33ee",
       "scope": "qual:text"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Count articles per ticker and UTC day, with mean GDELT article tone.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "include_flagged": {
+            "default": false,
+            "title": "Include Flagged",
+            "type": "boolean"
+          },
+          "min_confidence": {
+            "default": 0.6,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Min Confidence",
+            "type": "number"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "tickers": {
+            "items": {
+              "maxLength": 20,
+              "minLength": 1,
+              "pattern": "^[A-Z0-9.\\-]+$",
+              "type": "string"
+            },
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Tickers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "start_date",
+          "end_date",
+          "tickers"
+        ],
+        "title": "TimelineInput",
+        "type": "object"
+      },
+      "name": "qual_get_news_timeline",
+      "outputSchema": {
+        "$defs": {
+          "TimelineData": {
+            "additionalProperties": false,
+            "description": "Daily counts. Days without articles are absent, not zero.",
+            "properties": {
+              "count": {
+                "title": "Count",
+                "type": "integer"
+              },
+              "rows": {
+                "items": {
+                  "$ref": "#/$defs/TimelineRow"
+                },
+                "title": "Rows",
+                "type": "array"
+              },
+              "tone_note": {
+                "title": "Tone Note",
+                "type": "string"
+              }
+            },
+            "required": [
+              "rows",
+              "count",
+              "tone_note"
+            ],
+            "title": "TimelineData",
+            "type": "object"
+          },
+          "TimelineRow": {
+            "additionalProperties": false,
+            "properties": {
+              "articles": {
+                "title": "Articles",
+                "type": "integer"
+              },
+              "day": {
+                "format": "date",
+                "title": "Day",
+                "type": "string"
+              },
+              "gdelt_article_tone": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Gdelt Article Tone"
+              },
+              "ticker": {
+                "title": "Ticker",
+                "type": "string"
+              },
+              "tone_articles": {
+                "title": "Tone Articles",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "ticker",
+              "day",
+              "articles",
+              "gdelt_article_tone",
+              "tone_articles"
+            ],
+            "title": "TimelineRow",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "content_trust": {
+            "const": "untrusted_external",
+            "default": "untrusted_external",
+            "title": "Content Trust",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/$defs/TimelineData"
+          },
+          "interface_version": {
+            "title": "Interface Version",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "stram_data_version": {
+            "title": "Stram Data Version",
+            "type": "string"
+          },
+          "tool_version": {
+            "title": "Tool Version",
+            "type": "string"
+          },
+          "warnings": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "tool_version",
+          "stram_data_version",
+          "interface_version",
+          "policy_version",
+          "request_id",
+          "data"
+        ],
+        "title": "ToolEnvelope[TimelineData]",
+        "type": "object"
+      },
+      "schemaHash": "6d3ea7e894e07eebdd46aaf1f645eb3925191f27d57d4abbe39ca2c05685f9f4",
+      "scope": "qual:analytics"
     }
   ]
 }

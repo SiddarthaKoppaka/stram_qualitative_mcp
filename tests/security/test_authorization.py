@@ -114,9 +114,9 @@ async def test_success_and_rate_limit_each_create_one_terminal_record(tmp_path) 
 
     records = _records(settings.audit_db_path)
     audit.close()
-    assert result["data"]["policies"]
+    assert result["data"]["providers"]
     assert [record["outcome"] for record in records] == ["success", "rate_limited"]
-    assert records[0]["row_count"] == len(result["data"]["policies"])
+    assert records[0]["row_count"] == len(result["data"]["providers"])
     assert records[0]["data_scope"] == {}
 
 

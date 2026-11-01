@@ -50,7 +50,7 @@ async def test_official_client_lists_and_calls_real_streamable_http_tools(tmp_pa
             "sub": "researcher-1",
             "client_id": "qual-client",
             "tenant_id": "stram",
-            "scope": "qual:discover qual:read qual:text",
+            "scope": "qual:discover qual:read qual:text qual:analytics",
             "iat": now - 1,
             "exp": now + 300,
         },
@@ -108,7 +108,7 @@ async def test_official_client_lists_and_calls_real_streamable_http_tools(tmp_pa
             )
 
         assert initialized.server_info.name == "stram-qualitative"
-        assert len(listed.tools) == 4
+        assert len(listed.tools) == 5
         assert all(tool.annotations and tool.annotations.read_only_hint for tool in listed.tools)
         assert result.is_error is False
         assert result.structured_content is not None

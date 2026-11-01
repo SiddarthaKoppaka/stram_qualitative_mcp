@@ -41,6 +41,11 @@ def test_every_real_result_round_trips_through_its_output_contract(
             "start_date": "2026-10-01",
             "end_date": "2026-10-31",
         },
+        "qual_get_news_timeline": {
+            "tickers": ["AAPL"],
+            "start_date": "2026-10-01",
+            "end_date": "2026-10-31",
+        },
         "qual_get_article": {"article_id": str(uuid.uuid5(uuid.NAMESPACE_URL, "held-text"))},
     }
 

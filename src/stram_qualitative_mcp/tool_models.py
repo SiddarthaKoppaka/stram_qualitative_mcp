@@ -6,10 +6,11 @@ from datetime import date, datetime, timedelta
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
-from stram_data.data_interface import NewsRow, NewsTicker, PolicyInfo
+from stram_data.data_interface import NewsProviderCoverage, NewsRow, NewsTicker
 
 MAX_SPAN_DAYS = 1830
 MAX_SPAN_DAYS_WITHOUT_TICKERS = 92
+MAX_TIMELINE_DAYS = 366
 MAX_RESULT_ROWS = 100
 DEFAULT_RESULT_ROWS = 20
 DEFAULT_MIN_CONFIDENCE = 0.6
@@ -18,6 +19,20 @@ MAX_TEXT_CHARS = 8000
 MAX_TEXT_OFFSET = 10_000_000
 # Ingestion of history began here, so an earlier as_of sees almost nothing.
 HISTORY_INGESTED_FROM = date(2026, 10, 30)
+
+TONE_NOTE = (
+    "gdelt_article_tone is GDELT's score for whole articles, not sentiment about the ticker. "
+    "tone_articles is how many articles sit behind it; a low count means a thin average."
+)
+COVERAGE_LIMITATIONS = (
+    "GDELT provides titles and tone, and most GDELT items have no stored text.",
+    "Confidence is a rule-based label, not a probability.",
+    "Some spam passes the content_farm flag.",
+    "as_of uses ingestion time, and history arrived from about 2026-10-30.",
+    "published_at is the provider's time.",
+    "A missing GDELT slot means we hold nothing for it; it does not say why.",
+    "SEC announcements hold a 500-character summary, with no stored full text.",
+)
 
 Provider = Literal["finnhub", "gdelt", "sec"]
 Ticker = Annotated[
@@ -198,10 +213,47 @@ class NewsSearchData(ContractModel):
     availability_note: str
 
 
-class CoverageData(ContractModel):
-    """M0 placeholder: M3 replaces this with per-source coverage."""
+class TimelineInput(ContractModel):
+    start_date: date
+    end_date: date
+    tickers: tuple[Ticker, ...] = Field(min_length=1, max_length=5)
+    min_confidence: float = Field(default=DEFAULT_MIN_CONFIDENCE, ge=0.0, le=1.0)
+    include_flagged: bool = False
 
-    policies: tuple[PolicyInfo, ...]
+    @model_validator(mode="after")
+    def validate_range(self) -> TimelineInput:
+        if self.start_date > self.end_date:
+            raise ValueError("start_date must be on or before end_date")
+        if self.end_date - self.start_date > timedelta(days=MAX_TIMELINE_DAYS):
+            raise ValueError(f"date range is limited to {MAX_TIMELINE_DAYS} days")
+        return self
+
+
+class TimelineRow(ContractModel):
+    ticker: str
+    day: date
+    articles: int
+    gdelt_article_tone: float | None
+    tone_articles: int
+
+
+class TimelineData(ContractModel):
+    """Daily counts. Days without articles are absent, not zero."""
+
+    rows: tuple[TimelineRow, ...]
+    count: int
+    tone_note: str
+
+
+class CoverageData(ContractModel):
+    """What the lake holds, and what callers must not assume about it."""
+
+    providers: tuple[NewsProviderCoverage, ...]
+    tracked_tickers: tuple[str, ...]
+    missing_gdelt_slots: tuple[datetime, ...]
+    missing_gdelt_slot_count: int
+    gdelt_window_days: int
+    limitations: tuple[str, ...]
 
 
 class ToolEnvelope[DataT: BaseModel](ContractModel):
@@ -218,6 +270,7 @@ class ToolEnvelope[DataT: BaseModel](ContractModel):
 
 
 CoverageEnvelope = ToolEnvelope[CoverageData]
+TimelineEnvelope = ToolEnvelope[TimelineData]
 NewsSearchEnvelope = ToolEnvelope[NewsSearchData]
 FilingsEnvelope = ToolEnvelope[FilingsData]
 ArticleEnvelope = ToolEnvelope[ArticleData]

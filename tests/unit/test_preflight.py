@@ -94,7 +94,7 @@ async def test_worker_interface_probe_uses_production_worker_boundary(monkeypatc
             _timeout: float,
         ) -> dict[str, object]:
             calls.extend((tool, request_id))
-            return {"data": {"policies": []}}
+            return {"data": {"providers": []}}
 
         async def close(self) -> None:
             calls.append("close")
