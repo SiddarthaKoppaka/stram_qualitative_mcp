@@ -1,6 +1,6 @@
 # Stram Qualitative MCP: plan
 
-Status on 2026-11-01: M0 is done. Nothing is deployed.
+Status on 2026-11-01: M0 and M1 are done. Nothing is deployed.
 
 This service gives agents read-only access to Stram's News & Intelligence data over MCP. It follows
 [`stram_quant_mcp`](https://github.com/SiddarthaKoppaka/stram_quant_mcp) and keeps its security model.
@@ -226,11 +226,15 @@ Implement one reviewed milestone at a time and record evidence here.
 | M5 | Real lake on the data host, loopback only | Budgets in section 9 met on the live lake; pipelines unaffected |
 | M6 | Staging with Keycloak | Quant's M6 acceptance checks pass for this service |
 
-M1 can start now. The reader fixes it depends on are merged in `stram_data` 1.4.1.
+M2 is next, and needs `stram_data` 1.5.
 
 **M0 evidence (2026-11-01).** Copied from `stram_quant_mcp` at `d191333`, pinned to `stram_data` 1.4.1
-(`4e9fe24`). The fixture lake is still Quant's synthetic data, and M1 replaces it with synthetic news.
-Tests ran on Linux, on the data host, from a throwaway copy using Python 3.13.
+(`4e9fe24`). Tests ran on Linux, on the data host, from a throwaway copy using Python 3.13.
+
+**M1 evidence (2026-11-01).** `qual_search_news` passes through the official MCP client against a
+synthetic news lake. `collapse_stories` and `story_id` wait for M4, and `copies` with them.
+Through the isolated worker at 3 GB on the live lake, read-only: ticker 1 month 1.1 s, ticker 1 year
+2.6 s, 3 tickers 1 year 100 rows 3.9 s, text 1 month 2.4 s. All are within section 9's budgets.
 
 ## 9. Budgets
 

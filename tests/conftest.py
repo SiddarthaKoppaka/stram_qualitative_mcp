@@ -13,7 +13,7 @@ SYNTHETIC_LAKE = ROOT / "tests/fixtures/lake"
 
 @pytest.fixture
 def data_interface() -> DataInterface:
-    return DataInterface(SYNTHETIC_LAKE)
+    return DataInterface(SYNTHETIC_LAKE, news_parquet_root=SYNTHETIC_LAKE)
 
 
 @pytest.fixture

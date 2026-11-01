@@ -63,7 +63,7 @@ def preflight(
         raise RuntimeError("stram-data release mismatch")
     if INTERFACE_VERSION != EXPECTED_INTERFACE_VERSION:
         raise RuntimeError("Data Interface version mismatch")
-    data = DataInterface(lake)
+    data = DataInterface(lake, news_parquet_root=lake)
     policies = data.describe_availability_policies()
     if not policies:
         raise RuntimeError("availability policies are unavailable")

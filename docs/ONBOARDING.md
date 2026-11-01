@@ -37,7 +37,7 @@ uv run pytest tests/contract tests/security/test_no_sql_or_execution.py -q
 uv run pytest tests/integration/test_read_tools.py tests/integration/test_analytics_tools.py -q
 ```
 
-Expected: the contract pin, the placeholder tool, and the security, worker and telemetry suites pass
+Expected: the contract pin, the news search tool, and the security, worker and telemetry suites pass
 against `tests/fixtures/lake`.
 
 ## Start and connect with a test identity
@@ -50,7 +50,7 @@ uv run pytest tests/integration/test_mcp_client.py -q
 
 It performs the entire workflow: chooses a loopback port, generates an ephemeral RSA key, signs a
 five-minute JWT with all four tool scopes, starts authenticated Streamable HTTP, initializes the
-official MCP client, lists the tool, calls `qual_describe_coverage`, verifies a genuine synthetic-lake
+official MCP client, lists the tools, calls `qual_search_news`, verifies a genuine synthetic-lake
 record and shuts down. The Data Interface and worker are real; only identity material is local and
 ephemeral.
 

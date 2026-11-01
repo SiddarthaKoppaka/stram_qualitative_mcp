@@ -8,8 +8,8 @@ own SQL, ingestion, ranking, scoring, lake schemas or AI orchestration.
 It is built from [`stram_quant_mcp`](https://github.com/SiddarthaKoppaka/stram_quant_mcp) at commit
 `d191333` and keeps that service's security model.
 
-Status: M0 only. The security and transport layers are in place with one placeholder tool,
-`qual_describe_coverage`. No news tool exists yet and nothing is deployed. See [PLANS.md](PLANS.md).
+Status: M1. `qual_search_news` works on synthetic data, beside the placeholder
+`qual_describe_coverage`. Nothing is deployed. See [PLANS.md](PLANS.md).
 
 ## Architecture in five minutes
 
@@ -43,7 +43,7 @@ uv run pytest tests/integration/test_mcp_client.py -q
 ```
 
 The integration test starts the real server on loopback, signs a short-lived JWT, connects with the
-official MCP SDK client, discovers the placeholder tool and calls the real Data Interface against
+official MCP SDK client, discovers the tools and calls the real Data Interface against
 `tests/fixtures/lake`. It does not use production credentials or mocked qualitative responses.
 
 Run the complete local gate:

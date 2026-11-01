@@ -28,7 +28,14 @@ def test_checked_in_tool_definitions_are_current_and_closed() -> None:
 def test_every_real_result_round_trips_through_its_output_contract(
     tool_adapter: QualToolAdapter,
 ) -> None:
-    examples: dict[str, dict[str, object]] = {"qual_describe_coverage": {}}
+    examples: dict[str, dict[str, object]] = {
+        "qual_describe_coverage": {},
+        "qual_search_news": {
+            "tickers": ["AAPL"],
+            "start_date": "2026-10-01",
+            "end_date": "2026-10-31",
+        },
+    }
 
     for spec in TOOL_SPECS:
         result = tool_adapter.execute(spec.name, examples[spec.name], spec.name)

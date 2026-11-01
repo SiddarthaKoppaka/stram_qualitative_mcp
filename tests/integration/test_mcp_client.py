@@ -50,7 +50,7 @@ async def test_official_client_lists_and_calls_real_streamable_http_tools(tmp_pa
             "sub": "researcher-1",
             "client_id": "qual-client",
             "tenant_id": "stram",
-            "scope": "qual:discover",
+            "scope": "qual:discover qual:read",
             "iat": now - 1,
             "exp": now + 300,
         },
@@ -102,14 +102,18 @@ async def test_official_client_lists_and_calls_real_streamable_http_tools(tmp_pa
         ):
             initialized = await session.initialize()
             listed = await session.list_tools()
-            result = await session.call_tool("qual_describe_coverage", {})
+            result = await session.call_tool(
+                "qual_search_news",
+                {"tickers": ["AAPL"], "start_date": "2026-10-01", "end_date": "2026-10-31"},
+            )
 
         assert initialized.server_info.name == "stram-qualitative"
-        assert len(listed.tools) == 1
+        assert len(listed.tools) == 2
         assert all(tool.annotations and tool.annotations.read_only_hint for tool in listed.tools)
         assert result.is_error is False
         assert result.structured_content is not None
-        assert result.structured_content["data"]["policies"]
+        assert result.structured_content["data"]["count"] == 3
+        assert result.structured_content["content_trust"] == "untrusted_external"
     finally:
         server.should_exit = True
         await asyncio.wait_for(server_task, timeout=10)

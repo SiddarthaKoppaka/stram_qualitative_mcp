@@ -25,8 +25,8 @@ async def test_every_tool_layer_read_leaves_the_lake_unchanged() -> None:
     worker = QueryWorker(LAKE)
     await worker.start()
     await worker.call(
-        "qual_describe_coverage",
-        {},
+        "qual_search_news",
+        {"tickers": ["AAPL"], "start_date": "2026-10-01", "end_date": "2026-10-31"},
         "read-only",
         10.0,
     )
