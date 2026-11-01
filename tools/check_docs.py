@@ -60,7 +60,7 @@ def blocks(text: str) -> list[tuple[str, str, int]]:
 
 
 def slug(heading: str) -> str:
-    text = re.sub(r"[`*_]", "", heading.lower())
+    text = re.sub(r"[`*]", "", heading.lower())
     text = re.sub(r"[^\w\- ]", "", text)
     return text.strip().replace(" ", "-")
 
