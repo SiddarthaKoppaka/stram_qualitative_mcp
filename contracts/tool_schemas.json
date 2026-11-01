@@ -1,0 +1,198 @@
+{
+  "tools": [
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Describe the availability policies in force. A placeholder until coverage is built.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "description": "Closed empty input for parameterless tools.",
+        "properties": {},
+        "title": "EmptyInput",
+        "type": "object"
+      },
+      "name": "qual_describe_coverage",
+      "outputSchema": {
+        "$defs": {
+          "CoverageData": {
+            "additionalProperties": false,
+            "description": "M0 placeholder: M3 replaces this with per-source coverage.",
+            "properties": {
+              "policies": {
+                "items": {
+                  "$ref": "#/$defs/PolicyInfo"
+                },
+                "title": "Policies",
+                "type": "array"
+              }
+            },
+            "required": [
+              "policies"
+            ],
+            "title": "CoverageData",
+            "type": "object"
+          },
+          "PolicyInfo": {
+            "additionalProperties": false,
+            "properties": {
+              "applies_to": {
+                "title": "Applies To",
+                "type": "string"
+              },
+              "basis": {
+                "title": "Basis",
+                "type": "string"
+              },
+              "calendar_coverage": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Calendar Coverage"
+              },
+              "enabled": {
+                "default": true,
+                "title": "Enabled",
+                "type": "boolean"
+              },
+              "evidence": {
+                "default": "modeled_delay",
+                "enum": [
+                  "verified_vintage",
+                  "official_schedule",
+                  "modeled_delay",
+                  "ingestion_bound",
+                  "hindsight"
+                ],
+                "title": "Evidence",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "estimated_policy",
+                  "source_vintage",
+                  "ingestion_upper_bound",
+                  "ex_post"
+                ],
+                "title": "Kind",
+                "type": "string"
+              },
+              "note": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Note"
+              },
+              "parameters": {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    }
+                  ]
+                },
+                "title": "Parameters",
+                "type": "object"
+              },
+              "policy_id": {
+                "title": "Policy Id",
+                "type": "string"
+              },
+              "sources": {
+                "default": [],
+                "items": {
+                  "type": "string"
+                },
+                "title": "Sources",
+                "type": "array"
+              },
+              "verified": {
+                "title": "Verified",
+                "type": "boolean"
+              },
+              "version": {
+                "title": "Version",
+                "type": "string"
+              }
+            },
+            "required": [
+              "policy_id",
+              "version",
+              "applies_to",
+              "kind",
+              "verified",
+              "basis",
+              "parameters"
+            ],
+            "title": "PolicyInfo",
+            "type": "object"
+          }
+        },
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/$defs/CoverageData"
+          },
+          "interface_version": {
+            "title": "Interface Version",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "string"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "stram_data_version": {
+            "title": "Stram Data Version",
+            "type": "string"
+          },
+          "tool_version": {
+            "title": "Tool Version",
+            "type": "string"
+          },
+          "warnings": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "tool_version",
+          "stram_data_version",
+          "interface_version",
+          "policy_version",
+          "request_id",
+          "data"
+        ],
+        "title": "ToolEnvelope[CoverageData]",
+        "type": "object"
+      },
+      "schemaHash": "d37194fb744d812c89cc49801c0c33a9010fd840db1eb4c035446f80174b0ad1",
+      "scope": "qual:discover"
+    }
+  ]
+}
