@@ -1,6 +1,6 @@
 # Stram Qualitative MCP: plan
 
-Status on 2026-11-01: M0 to M3 are done. Nothing is deployed.
+Status on 2026-11-01: M0 to M3 and M5 are done. A loopback demonstration runs on the data host.
 
 This service gives agents read-only access to Stram's News & Intelligence data over MCP. It follows
 [`stram_quant_mcp`](https://github.com/SiddarthaKoppaka/stram_quant_mcp) and keeps its security model.
@@ -220,7 +220,14 @@ Implement one reviewed milestone at a time and record evidence here.
 | M5 | Real lake on the data host, loopback only | Budgets in section 9 met on the live lake; pipelines unaffected |
 | M6 | Staging with Keycloak | Quant's M6 acceptance checks pass for this service |
 
-M4 is next.
+M4 remains, and M5 ran ahead of it.
+
+**M5 evidence (2026-11-01).** The service runs on the data host on a loopback port, with a read-only view of
+`parquet` and `bodies`. Through the official MCP client over HTTP on the live lake: coverage 2.7 s, ticker
+1 month 1.9 s, ticker 1 year 4.1 s, 3 tickers 1 year 100 rows 5.1 s, text 1 month 2.9 s, filings 0.4 s, article
+2.3 s, timeline 1.1 s. All are within section 9's budgets, and some are close. Requests without a valid
+token get 401 and a wrong host gets 421. Pipelines stayed active. The demonstration signing key and
+one-hour tokens are not staging.
 
 **M3 evidence (2026-11-01).** On `stram_data` 1.6.0 (`947e49b`), all five tools pass through the official
 MCP client on synthetic data. Through the isolated worker on the live lake, read-only: coverage 1.2 s,

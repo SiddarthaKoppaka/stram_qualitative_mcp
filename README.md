@@ -8,7 +8,8 @@ own SQL, ingestion, ranking, scoring, lake schemas or AI orchestration.
 It is built from [`stram_quant_mcp`](https://github.com/SiddarthaKoppaka/stram_quant_mcp) at commit
 `d191333` and keeps that service's security model.
 
-Status: M3. All five tools work on synthetic data, with story collapsing still to come. Nothing is deployed. See [PLANS.md](PLANS.md).
+Status: M5. All five tools run as a loopback demonstration on the live lake, with story collapsing
+still to come. See [PLANS.md](PLANS.md).
 
 ## Architecture in five minutes
 
