@@ -44,7 +44,7 @@ async def run(endpoint: str, token: str, ticker: str) -> None:
         print(f"coverage: {sources}; {len(coverage['tracked_tickers'])} tracked tickers")
 
         search = await call("qual_search_news", {**DATES, "tickers": [ticker]})
-        print(f"search {ticker}: {search['count']} articles, truncated={search['truncated']}")
+        print(f"search {ticker}: {search['count']} stories, truncated={search['truncated']}")
 
         filings = await call("qual_get_filings", {**DATES, "tickers": [ticker]})
         print(f"filings {ticker}: {filings['count']}")

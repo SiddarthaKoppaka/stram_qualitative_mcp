@@ -99,8 +99,9 @@ little, and the response warns you.
 
 ## Reading the data honestly
 
-- **Article counts are not independent reports.** The same story often appears many times. Story
-  collapsing is planned.
+- **Copies are not independent reports.** Search shows one row per story, with a `copies` count, and
+  the timeline has `stories` beside `articles`. Stories match exact titles, so reworded copies stay
+  separate, and `copies` measures repetition, not confirmation.
 - **Most GDELT items have a title and tone, with no text.** Do not imply they were read.
 - **Confidence is a rule-based label,** not a probability. The default of 0.6 is a practical filter.
 - **Tone is GDELT's score for a whole article,** not sentiment about the company. Check

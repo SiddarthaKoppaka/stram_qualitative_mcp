@@ -118,6 +118,7 @@ class QualToolAdapter:
                     ticker=row.ticker,
                     day=row.day,
                     articles=row.articles,
+                    stories=row.stories,
                     gdelt_article_tone=row.mean_tone,
                     tone_articles=row.tone_articles,
                 )

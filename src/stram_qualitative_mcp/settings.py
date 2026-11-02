@@ -29,7 +29,7 @@ class AppSettings(BaseModel):
     max_queued: int = Field(default=2, ge=0, le=32)
     max_request_body_bytes: int = Field(default=1024 * 1024, ge=1024, le=4 * 1024 * 1024)
     max_response_bytes: int = Field(default=4 * 1024 * 1024, ge=1024, le=8 * 1024 * 1024)
-    worker_memory_mb: int = Field(default=3072, ge=128, le=8192)
+    worker_memory_mb: int = Field(default=4096, ge=128, le=8192)
     worker_max_restarts: int = Field(default=3, ge=0, le=20)
     worker_restart_backoff_seconds: float = Field(default=0.25, ge=0, le=10)
     worker_shutdown_seconds: float = Field(default=5.0, gt=0, le=30)

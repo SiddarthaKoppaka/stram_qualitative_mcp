@@ -84,7 +84,7 @@ the lake, so a new image can only read what the pipeline has written.
 | Results stop at an old date | The pipeline stalled | Check the News services; this service only reads |
 | Slow searches | Too many small Parquet files | Check compaction ran; see below |
 | `overloaded` | Too many calls at once | Queries run one at a time, with 30 calls a minute per caller |
-| `unavailable` on wide searches | The worker hit its 3 GB limit | Narrow the request |
+| `unavailable` on wide searches | The worker hit its 4 GB limit | Narrow the request. DuckDB gets half the limit and 4 threads |
 
 The worker restarts itself after a crash or timeout. After three failures in a row, readiness stays
 false until you restart the service.

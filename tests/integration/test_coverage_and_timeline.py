@@ -66,5 +66,10 @@ def test_timeline_labels_tone_and_shows_how_many_articles_back_it(
     assert "not sentiment" in _timeline(tool_adapter).tone_note
 
 
+def test_timeline_counts_stories_beside_articles(tool_adapter: QualToolAdapter) -> None:
+    rows = _timeline(tool_adapter, tickers=["INTC"]).rows
+    assert [(row.articles, row.stories) for row in rows] == [(2, 1)]
+
+
 def test_days_without_articles_are_absent(tool_adapter: QualToolAdapter) -> None:
     assert 2 not in {row.day.day for row in _timeline(tool_adapter).rows}

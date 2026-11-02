@@ -1,6 +1,6 @@
 # Stram Qualitative MCP: plan
 
-Status on 2026-11-01: M0 to M3 and M5 are done. A loopback demonstration runs on the data host.
+Status on 2026-11-02: M0 to M5 are done. A loopback demonstration runs on the data host.
 
 This service gives agents read-only access to Stram's News & Intelligence data over MCP. It follows
 [`stram_quant_mcp`](https://github.com/SiddarthaKoppaka/stram_quant_mcp) and keeps its security model.
@@ -70,7 +70,7 @@ Naming: package `stram_qualitative_mcp`, tools `qual_*`, scopes `qual:*`, settin
 | Area | Quant | Qualitative | Why |
 |---|---|---|---|
 | Result rows | 100 default, 500 max | 20 default, 100 max | News rows use far more of a model's context |
-| Worker memory | 1 GB | 3 GB | Live trials failed at 1 GB and on some queries at 2 GB |
+| Worker memory | 1 GB | 4 GB address space, 2 GB for DuckDB | Calls failed at 3 GB in a long-running worker |
 | Lake mount | `data-lake/parquet` | `data-lake/news/parquet` and `bodies` | Text lives beside Parquet; the raw archive is not exposed |
 | Content trust | Numbers | Untrusted third-party text | See section 4 |
 | Permissions | Discover, read, lineage, analytics | Discover, read, text, analytics | Full text gets its own scope |
@@ -169,12 +169,11 @@ These facts come from the live data on 2026-11-01. Tool output must not suggest 
 
 ## 6. Required `stram_data` work
 
-M2's and M3's additions shipped in `stram_data` 1.5.0 and 1.6.0. Every item left adds to the Data Interface and needs a new contract baseline. These go in `stram_data`
+M2's, M3's and M4's additions shipped in `stram_data` 1.5.0, 1.6.0 and 1.7.0. Every item left adds to the Data Interface and needs a new contract baseline. These go in `stram_data`
 pull requests, and the Data Interface needs Sid's review.
 
 | Item | Change | Needed by |
 |---|---|---|
-| Stories | `story_id` and copy counts from Parquet | M4 |
 
 **SEC text.** All 3,936 SEC announcements say `fetched`, but none has a `body_path`. They hold a
 500-character summary, and the full document is only in the raw archive, which this plan does not
@@ -220,7 +219,18 @@ Implement one reviewed milestone at a time and record evidence here.
 | M5 | Real lake on the data host, loopback only | Budgets in section 9 met on the live lake; pipelines unaffected |
 | M6 | Staging with Keycloak | Quant's M6 acceptance checks pass for this service |
 
-M4 remains, and M5 ran ahead of it.
+M6 remains, and waits on Keycloak.
+
+**M4 evidence (2026-11-02).** `qual_search_news` returns one row per story by default, on `stram_data`
+1.7.0 (`e21f320`). Across 30 random days from 2021 to 2026, 35,107 of 35,110 story IDs match
+`article_stories`, including 3,051 of 3,053 non-ASCII titles. In an earlier sample, the ASCII mismatches
+came from different `published_at` values in the two stores. The worker limit rose after a soak test
+found M5's timings hid a failure: DuckDB sized itself from the machine, so repeated calls returned
+`unavailable` in a long-running worker at 3 GB, on 1.6.0 too. With 4 GB, 2 GB for DuckDB and 4 threads,
+99 of 99 calls passed over seven minutes on the live lake with no restart, at low priority. Slowest
+calls: ticker 1 month 2.8 s, ticker 1 year 5.7 s, 3 tickers 1 year 8.7 s, text 1 month 4.2 s, 92 days of
+GDELT 9.2 s, timeline 3.8 s, coverage 2.2 s. The ticker and 3-ticker worst cases exceed section 9's
+budgets of 2, 5 and 8 s, on a lake not yet compacted.
 
 **M5 evidence (2026-11-01).** The service runs on the data host on a loopback port, with a read-only view of
 `parquet` and `bodies`. Through the official MCP client over HTTP on the live lake: coverage 2.7 s, ticker
@@ -259,7 +269,7 @@ Measured on the live lake after compaction, on an 8-core host. M5 repeats these 
 | 3 tickers, 1 year, 100 rows | 4.3 s | 8 s |
 | Text, 1 month, 20 rows | 2.5 s | 5 s |
 
-One query runs at a time, as in Quant. The worker's memory limit is 3 GB.
+One query runs at a time, as in Quant. The worker's memory limit is 4 GB.
 
 ## 10. Risks
 

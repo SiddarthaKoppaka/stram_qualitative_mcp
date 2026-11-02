@@ -156,6 +156,21 @@ def items() -> list[NewsItem]:
             version="b",
         ),
         _item(
+            "story-late",
+            "Synthetic Chipmaker Wins Large Supply Contract",
+            _day(21, 14),
+            _day(21, 15),
+            (("INTC", 0.9),),
+        ),
+        _item(
+            "story-early",
+            "synthetic chipmaker wins large supply contract!",
+            _day(21, 9),
+            _day(21, 15),
+            (("INTC", 0.9),),
+            provider="gdelt",
+        ),
+        _item(
             "backfill",
             "Synthetic backfilled story",
             _day(1),

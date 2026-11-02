@@ -16,7 +16,7 @@ News lake folder, the one holding `parquet/` and `bodies/`.
 - `uv`, Git and `openssl`.
 - `sudo` on the host, and about 1 GB of free disk for the image.
 - A `stram_data` checkout holding the commit this repository pins.
-- About 4 GB of spare memory.
+- About 5 GB of spare memory.
 
 ## What gets created
 

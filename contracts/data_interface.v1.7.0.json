@@ -1,8 +1,8 @@
 {
-  "baseline_sha256": "6bae8fc62949e8f2139b2db633ffe5d7952937cd4f70d12f9d0b9c6689cfc8fd",
+  "baseline_sha256": "338051acc16016a1c26889cea9a6678cd34f796cea8b1caeae5041fb8335e9a1",
   "interface_version": "1",
-  "package_commit": "947e49b2cd054e280918274e27e6940d7327e17f",
-  "package_version": "1.6.0",
+  "package_commit": "e21f320400ab7191a931c28297513a8af34dd6e9",
+  "package_version": "1.7.0",
   "public_methods": [
     "describe_availability_policies",
     "get_aligned_panel",

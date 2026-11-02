@@ -139,7 +139,7 @@ Tmpfs=/tmp:rw,noexec,nosuid,nodev,size=2g
 Restart=on-failure
 RestartSec=5s
 TimeoutStartSec=120
-MemoryMax=4G
+MemoryMax=5G
 
 [Install]
 WantedBy=default.target

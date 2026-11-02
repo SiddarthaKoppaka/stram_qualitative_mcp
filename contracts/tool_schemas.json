@@ -198,6 +198,11 @@
             "default": null,
             "title": "As Of"
           },
+          "collapse_stories": {
+            "default": true,
+            "title": "Collapse Stories",
+            "type": "boolean"
+          },
           "end_date": {
             "format": "date",
             "title": "End Date",
@@ -286,6 +291,17 @@
                 "title": "Article Id",
                 "type": "string"
               },
+              "copies": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Copies"
+              },
               "first_ingested_at": {
                 "format": "date-time",
                 "title": "First Ingested At",
@@ -317,6 +333,17 @@
                 },
                 "title": "Quality Flags",
                 "type": "array"
+              },
+              "story_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Story Id"
               },
               "summary": {
                 "anyOf": [
@@ -355,6 +382,8 @@
             },
             "required": [
               "article_id",
+              "story_id",
+              "copies",
               "provider",
               "publisher",
               "published_at",
@@ -496,7 +525,7 @@
         "title": "ToolEnvelope[NewsSearchData]",
         "type": "object"
       },
-      "schemaHash": "cc32c6d6abc5c8d01dd2f82b3326fe725e624c311cc064cd97c134396f8e5a7f",
+      "schemaHash": "7f5b92ad489f38eaed645028d0a696c10c0a602920ad7b8cc5baf5c6b6510a28",
       "scope": "qual:read"
     },
     {
@@ -885,6 +914,17 @@
                 "title": "Article Id",
                 "type": "string"
               },
+              "copies": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Copies"
+              },
               "first_ingested_at": {
                 "format": "date-time",
                 "title": "First Ingested At",
@@ -916,6 +956,17 @@
                 },
                 "title": "Quality Flags",
                 "type": "array"
+              },
+              "story_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Story Id"
               },
               "summary": {
                 "anyOf": [
@@ -954,6 +1005,8 @@
             },
             "required": [
               "article_id",
+              "story_id",
+              "copies",
               "provider",
               "publisher",
               "published_at",
@@ -1045,7 +1098,7 @@
         "title": "ToolEnvelope[ArticleData]",
         "type": "object"
       },
-      "schemaHash": "8ad8328ffc1e6b8e015825e387cb3bb48cdbb8bee67196770727ccea15af33ee",
+      "schemaHash": "34839c3262666458cc6b6250e2bafabfaad7ba95805c1b2953663a23015f3cbe",
       "scope": "qual:text"
     },
     {
@@ -1156,6 +1209,10 @@
                 ],
                 "title": "Gdelt Article Tone"
               },
+              "stories": {
+                "title": "Stories",
+                "type": "integer"
+              },
               "ticker": {
                 "title": "Ticker",
                 "type": "string"
@@ -1169,6 +1226,7 @@
               "ticker",
               "day",
               "articles",
+              "stories",
               "gdelt_article_tone",
               "tone_articles"
             ],
@@ -1227,7 +1285,7 @@
         "title": "ToolEnvelope[TimelineData]",
         "type": "object"
       },
-      "schemaHash": "6d3ea7e894e07eebdd46aaf1f645eb3925191f27d57d4abbe39ca2c05685f9f4",
+      "schemaHash": "8e121dbabfaead4bfe993446c95367d8ebed2f884a2f15f1b187cb726f5a59fd",
       "scope": "qual:analytics"
     }
   ]

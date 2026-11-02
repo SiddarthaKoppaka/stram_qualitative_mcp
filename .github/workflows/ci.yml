@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: SiddarthaKoppaka/stram_data
-          ref: 947e49b2cd054e280918274e27e6940d7327e17f # pragma: allowlist secret; public commit
+          ref: e21f320400ab7191a931c28297513a8af34dd6e9 # pragma: allowlist secret; public commit
           token: ${{ secrets.STRAM_DATA_READ_TOKEN }}
           path: stram_data
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0

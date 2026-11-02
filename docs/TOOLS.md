@@ -22,7 +22,7 @@ Successful calls return structured content with this envelope:
 ```json
 {
   "tool_version": "0.1.0",
-  "stram_data_version": "1.6.0",
+  "stram_data_version": "1.7.0",
   "interface_version": "1",
   "policy_version": "availability-policy-hash",
   "request_id": "server-generated-id",
@@ -65,8 +65,9 @@ Returns result cards, newest first.
 | `providers` | One of these three | All | `finnhub`, `gdelt`, `sec` |
 | `min_confidence` | No | 0.6 | 0 to 1 |
 | `include_flagged` | No | False | Includes `content_farm` and `routine_exchange_notice` items |
+| `collapse_stories` | No | True | One row per story. Set false to see every copy |
 | `as_of` | No | None | Only versions stored by the end of this date |
-| `limit` | No | 20 | 1 to 100 |
+| `limit` | No | 20 | 1 to 100, counting stories when collapsed |
 
 `data` holds `rows`, `count`, `limit`, `truncated`, `as_of` and `availability_note`. There is no cursor;
 `truncated=true` means narrow the request. Each row holds:
@@ -74,6 +75,8 @@ Returns result cards, newest first.
 | Field | Meaning |
 |---|---|
 | `article_id` | Pass to `qual_get_article` |
+| `story_id` | The same for copies of one story |
+| `copies` | How many copies matched this search; null when not collapsed |
 | `provider`, `publisher` | Where it came from |
 | `published_at` | The provider's time |
 | `first_ingested_at` | When we first stored it |
@@ -84,6 +87,12 @@ Returns result cards, newest first.
 | `quality_flags` | Data quality labels |
 
 `confidence` is a rule-based label, not a probability.
+
+A story is the same title on the same UTC day, across sites and providers. Filings and titles under
+five words are never grouped, and a reworded headline counts as a new story. A collapsed row is the
+earliest matching copy, so another copy may hold text when this one does not. `copies` counts only
+copies matching your filters, and they are not independent reports. In `qual_get_article`, `copies`
+is null.
 
 ## `qual_get_filings`
 
@@ -131,7 +140,7 @@ reduces hidden text and does not make it safe. An unknown `article_id` returns `
 | `min_confidence` | No | 0.6 | 0 to 1 |
 | `include_flagged` | No | False | As in search |
 
-`data` holds `rows`, `count` and `tone_note`. Each row holds `ticker`, `day`, `articles`,
+`data` holds `rows`, `count` and `tone_note`. Each row holds `ticker`, `day`, `articles`, `stories`,
 `gdelt_article_tone` and `tone_articles`.
 
 Days without articles are absent rather than zero. An article linked to two tickers counts once for

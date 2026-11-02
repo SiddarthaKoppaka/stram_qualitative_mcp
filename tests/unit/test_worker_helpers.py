@@ -3,6 +3,8 @@ from __future__ import annotations
 import errno
 import json
 import socket
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -133,3 +135,19 @@ def test_native_network_probe_checks_socket_and_io_uring(monkeypatch) -> None:
     verify_native_network_isolation()
     assert native.socket.results == []
     assert native.syscall.results == []
+
+
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="Linux limits")
+def test_memory_limit_also_bounds_duckdb() -> None:
+    script = (
+        "import os, resource\n"
+        "from stram_qualitative_mcp.worker import _apply_memory_limit\n"
+        "_apply_memory_limit(3072)\n"
+        "print(resource.getrlimit(resource.RLIMIT_AS)[0],\n"
+        "      os.environ['STRAM_DATA_DUCKDB_MEMORY_LIMIT'],\n"
+        "      os.environ['STRAM_DATA_DUCKDB_THREADS'])\n"
+    )
+    result = subprocess.run(  # noqa: S603
+        [sys.executable, "-c", script], capture_output=True, text=True, check=True
+    )
+    assert result.stdout.split() == [str(3072 * 1024 * 1024), "1536MB", "4"]

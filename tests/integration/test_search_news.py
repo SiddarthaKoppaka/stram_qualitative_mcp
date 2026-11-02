@@ -45,6 +45,18 @@ def test_text_and_provider_filters_work_without_tickers(tool_adapter: QualToolAd
     ]
 
 
+def test_search_returns_one_row_per_story(tool_adapter: QualToolAdapter) -> None:
+    rows = _search(tool_adapter, tickers=["INTC"]).rows
+    assert [(row.provider, row.copies) for row in rows] == [("gdelt", 2)]
+    assert rows[0].story_id != rows[0].article_id
+
+
+def test_collapsing_can_be_turned_off(tool_adapter: QualToolAdapter) -> None:
+    rows = _search(tool_adapter, tickers=["INTC"], collapse_stories=False).rows
+    assert [row.copies for row in rows] == [None, None]
+    assert rows[0].story_id == rows[1].story_id
+
+
 def test_text_available_requires_a_stored_body(tool_adapter: QualToolAdapter) -> None:
     rows = {row.title: row for row in _search(tool_adapter, tickers=["AAPL"]).rows}
     assert rows["Synthetic Apple supplier update"].text_available is True

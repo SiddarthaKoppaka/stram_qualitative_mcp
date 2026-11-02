@@ -31,8 +31,11 @@ from stram_qualitative_mcp.errors import (
 )
 
 DEFAULT_MAX_RESPONSE_BYTES = 4 * 1024 * 1024
-DEFAULT_MEMORY_LIMIT_MB = 3072
-EXPECTED_STRAM_DATA_VERSION = "1.6.0"
+DEFAULT_MEMORY_LIMIT_MB = 4096
+DUCKDB_THREADS = 4
+M_ARENA_MAX = -8  # glibc's mallopt parameter
+MALLOC_ARENAS = 2
+EXPECTED_STRAM_DATA_VERSION = "1.7.0"
 EXPECTED_INTERFACE_VERSION = "1"
 WorkerTarget = Callable[[Connection, str, int, int], None]
 
@@ -434,6 +437,10 @@ def _apply_memory_limit(memory_limit_mb: int) -> None:
 
     limit = memory_limit_mb * 1024 * 1024
     resource.setrlimit(resource.RLIMIT_AS, (limit, limit))
+    # DuckDB sizes itself from the machine, and malloc arenas use up the capped address space.
+    os.environ["STRAM_DATA_DUCKDB_MEMORY_LIMIT"] = f"{memory_limit_mb // 2}MB"
+    os.environ["STRAM_DATA_DUCKDB_THREADS"] = str(DUCKDB_THREADS)
+    ctypes.CDLL(None).mallopt(M_ARENA_MAX, MALLOC_ARENAS)
 
 
 def query_worker_main(

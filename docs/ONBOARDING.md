@@ -31,7 +31,7 @@ uv sync --frozen --dev
 uv run python -c 'import stram_data; print(stram_data.__version__)'
 ```
 
-Expected: `1.6.0`.
+Expected: `1.7.0`.
 
 ## 2. Start the service
 
@@ -68,7 +68,7 @@ Expected:
 {"status":"ready"}
 tools: qual_describe_coverage, qual_get_article, qual_get_filings, qual_get_news_timeline, qual_search_news
 coverage: finnhub 7, gdelt 1, sec 2; 80 tracked tickers
-search AAPL: 3 articles, truncated=False
+search AAPL: 3 stories, truncated=False
 filings AAPL: 1
 timeline AAPL: 3 days
 article: read 4000 of 9120 chars

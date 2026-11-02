@@ -1,7 +1,7 @@
 # Architecture
 
 This service is a thin, independently deployable MCP Tool Plane. It turns authenticated MCP requests
-into calls to the public `stram_data.data_interface` 1.6.0 API. News logic stays in the Data Plane;
+into calls to the public `stram_data.data_interface` 1.7.0 API. News logic stays in the Data Plane;
 this repository adds no SQL, joins, ranking, scoring or write paths.
 
 ## Service topology
@@ -20,7 +20,7 @@ flowchart LR
         O[logs, traces, metrics]
     end
     subgraph data[News Data Plane]
-        I[public Data Interface 1.6.0]
+        I[public Data Interface 1.7.0]
         Q[DuckDB]
         L[(read-only Parquet and text)]
     end

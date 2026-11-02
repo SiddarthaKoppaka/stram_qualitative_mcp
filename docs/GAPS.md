@@ -5,7 +5,7 @@ What is missing between the service today and the full vision in [PLANS.md](../P
 
 | # | Gap | Why it matters | Needs |
 |---|---|---|---|
-| 1 | Story collapsing (M4) | The same story appears many times | A `stram_data` change |
+| 1 | Reworded copies | A rewritten headline counts as a new story | Phase 2 embeddings |
 | 2 | Real login and private TLS (M6) | The demonstration is not safe to share | Keycloak and staging |
 | 3 | Reliable GDELT collection | 70 of the last 30 days' 15-minute slots are empty, and new ones still appear | Pipeline fix |
 | 4 | SEC announcement text | 3,936 announcements have only a 500-character summary | Writing the raw archive's text to `bodies/` |
@@ -27,8 +27,8 @@ What is missing between the service today and the full vision in [PLANS.md](../P
 
 ## Limits to keep in mind
 
-- **Budgets are close on small reads.** A one-month ticker search took 1.9 s against a 2 s budget, with
-  888 active Parquet files. Compaction should improve this.
+- **Some reads miss their budgets at worst.** In a soak test the slowest one-month ticker search took 2.8 s
+  against 2 s, and three tickers over a year took 8.7 s against 8 s. Compaction should improve this.
 - **Disk.** Compaction keeps the old Parquet files, about 2.5 GB last time, until someone removes them.
   The removal needs the data owner's approval.
 - **One worker.** Queries run one at a time, so a few slow calls delay the rest.
