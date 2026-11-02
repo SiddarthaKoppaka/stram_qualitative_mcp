@@ -36,7 +36,8 @@ as_service() {
 echo "== read-only lake view"
 for name in parquet bodies; do
   where="$VIEW/$name"
-  install -d -o root -g root -m 0755 "$where"
+  # A mounted view is read-only, so only prepare the folder before its first mount.
+  mountpoint -q "$where" || install -d -o root -g root -m 0755 "$where"
   unit=$(systemd-escape --path --suffix=mount "$where")
   cat > "/etc/systemd/system/$unit" <<EOF
 [Unit]
