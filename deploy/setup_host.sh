@@ -149,7 +149,10 @@ chown "$SERVICE_USER:$SERVICE_USER" "$QUADLET"/stram-qual*
 
 echo "== start"
 as_service systemctl --user daemon-reload
-as_service systemctl --user restart stram-qual-jwks.service stram-qual-mcp.service
+# Stopping a container takes the pod down with it, so stop everything and start from the pod.
+as_service systemctl --user stop stram-qual-mcp.service stram-qual-jwks.service stram-qual-pod.service
+as_service systemctl --user start stram-qual-pod.service
+as_service systemctl --user start stram-qual-jwks.service stram-qual-mcp.service
 sleep 5
 as_service systemctl --user --no-pager --lines=0 status stram-qual-mcp.service | sed -n 1,4p
 echo "Setup finished. Only 127.0.0.1:$PORT is published."
