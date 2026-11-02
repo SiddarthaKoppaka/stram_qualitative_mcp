@@ -27,8 +27,10 @@ What is missing between the service today and the full vision in [PLANS.md](../P
 
 ## Limits to keep in mind
 
-- **Some reads miss their budgets at worst.** In a soak test the slowest one-month ticker search took 2.8 s
-  against 2 s, and three tickers over a year took 8.7 s against 8 s. Compaction should improve this.
+- **Some reads miss their budgets at worst.** On the deployed service, the slowest one-month ticker search
+  took 4.3 s against 2 s. One-year ticker searches occasionally pass the 10 s deadline: 2 of 72 calls in a
+  repeated run. The cause is not known. Re-measure once compaction has run. After three failures in a row,
+  the worker stops restarting until the service is restarted.
 - **Disk.** Compaction keeps the old Parquet files, about 2.5 GB last time, until someone removes them.
   The removal needs the data owner's approval.
 - **One worker.** Queries run one at a time, so a few slow calls delay the rest.

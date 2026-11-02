@@ -232,6 +232,12 @@ calls: ticker 1 month 2.8 s, ticker 1 year 5.7 s, 3 tickers 1 year 8.7 s, text 1
 GDELT 9.2 s, timeline 3.8 s, coverage 2.2 s. The ticker and 3-ticker worst cases exceed section 9's
 budgets of 2, 5 and 8 s, on a lake not yet compacted.
 
+**Deployed M4 evidence (2026-11-02).** Through the official MCP client over HTTP on the deployed service,
+70 of 72 calls passed over five and a half minutes, with no `unavailable` errors. The two failures were
+a one-year ticker search and a three-ticker search hitting the 10 s deadline, with the slowest calls near
+12.8 s. The cause is not known. Readiness held, and later rounds passed. Other worst cases: ticker
+1 month 4.3 s, text 1 month 4.8 s, GDELT 92 days 8.9 s, timeline 4.7 s, filings 0.8 s, coverage 2.7 s.
+
 **M5 evidence (2026-11-01).** The service runs on the data host on a loopback port, with a read-only view of
 `parquet` and `bodies`. Through the official MCP client over HTTP on the live lake: coverage 2.7 s, ticker
 1 month 1.9 s, ticker 1 year 4.1 s, 3 tickers 1 year 100 rows 5.1 s, text 1 month 2.9 s, filings 0.4 s, article
