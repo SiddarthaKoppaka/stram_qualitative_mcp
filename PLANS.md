@@ -246,8 +246,19 @@ Running compaction early brought the active set to 53 files and the article read
 repeated timeouts hit the worker's restart limit, and a plain `systemctl restart` then failed because
 stopping the container stops the pod; [Operations](docs/OPERATIONS.md) now restarts from the pod.
 
-Not yet done: the rest of the [checklist](docs/OPERATIONS.md#m6-staging-checklist), including firewall
-egress, write-denial and seccomp evidence, audit backup and restore, rollback, and alerts.
+`m6_evidence.sh`, run on the host at 05:50 UTC, passed all 17 checks: the service user and the container
+cannot write `parquet`, `bodies` or the container's root; the query worker shows `Seccomp: 2`, one filter
+and `NoNewPrivs: 1`; a killed worker restarted and readiness returned in 3 s; the service stopped
+cleanly; the journal verified, and a copy restored into a scratch volume matched it. External
+checkpoint: 137 records, last sequence 137, last hash
+`21a8e4ff4b1840be29bf948ef4b0d83225624503f7e4ce064b0edd15613d18d5`, key `af5fcd5462cd33a5`. Image
+`65667b7857c9`. Eight simultaneous calls from the laptop gave seven results and one `overloaded`, and
+readiness held. The deadline and the restart limit were exercised by the article timeouts above.
+
+Open, with owners needed: the host egress firewall, to plan with the Quant owner because the host is
+shared; a reviewed image digest with provenance and a rollback to an earlier one; agreed audit
+retention; alerts and dashboards; an off-host copy of the audit backup; and a licensing review before
+anyone outside the team gets `qual:text`.
 
 **M4 evidence (2026-11-02).** `qual_search_news` returns one row per story by default, on `stram_data`
 1.7.0 (`e21f320`). Across 30 random days from 2021 to 2026, 35,107 of 35,110 story IDs match

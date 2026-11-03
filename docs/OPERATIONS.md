@@ -165,19 +165,24 @@ If you lost the key, or need to replace it, stop the service, move the old volum
 
 ## M6 staging checklist
 
-All of this is **not yet done**. Staging must not take traffic until each item has an owner and
-evidence in [PLANS.md](../PLANS.md).
+Staging runs for the team on the tailnet. It must not serve anyone outside the team until every item
+has an owner and evidence in [PLANS.md](../PLANS.md). Evidence for the ticked items is from
+2026-11-03; [m6_check.py](../tools/m6_check.py) and [m6_evidence.sh](../deploy/m6_evidence.sh)
+repeat it.
 
-- [ ] Image pinned by digest, with SBOM, provenance, vulnerability report and a rollback digest.
-- [ ] Keycloak client with exact issuer, audience, tenant claim and least scopes. Missing, forged,
-  expired, wrong-audience, wrong-tenant and wrong-scope tokens all fail.
-- [ ] Private TLS, with exact Host and Origin rules.
+- [ ] Image pinned by digest, with SBOM, provenance, vulnerability report and a rollback digest. The
+  image ID is recorded, and CI builds an SBOM; there is no provenance or earlier digest yet.
+- [x] Keycloak client with exact issuer, audience, tenant claim and least scopes. Missing, forged and
+  wrong-scope tokens fail through the tailnet. Expired, wrong-audience and wrong-tenant tokens are
+  refused in tests, and the realm check confirmed audience isolation.
+- [x] Private TLS, with exact Host and Origin rules.
 - [ ] Host firewall allowing outbound traffic only to the issuer, JWKS and approved telemetry.
-- [ ] Unprivileged host and in-container writes to the lake both fail, with evidence.
-- [ ] `/proc` shows the seccomp filter on the query worker during a real call.
-- [ ] Audit backup, independent verification, external checkpoint and a restore drill.
+- [x] Unprivileged host and in-container writes to the lake both fail, with evidence.
+- [x] `/proc` shows the seccomp filter on the query worker during a real call.
+- [x] Audit backup, independent verification, external checkpoint and a restore drill. The backup is
+  still on the same disk.
 - [ ] Agreed retention. The proposal is 90 days online and one year archived.
-- [ ] Overload, deadline, worker crash, restart limit and graceful shutdown exercised.
+- [x] Overload, deadline, worker crash, restart limit and graceful shutdown exercised.
 - [ ] Dashboards, alerts and owners, with telemetry redaction checked.
 - [ ] Rollback to the previous digest restores readiness without touching the lake or journal.
 - [ ] Licensing checked before anyone outside the team gets `qual:text`.
