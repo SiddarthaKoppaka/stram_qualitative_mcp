@@ -101,6 +101,9 @@ as_service systemctl --user start stram-qual-mcp.service
 DRILL=stram-qual-audit-drill-$STAMP
 as_service podman volume create "$DRILL" >/dev/null
 as_service podman volume import "$DRILL" "$STAGE/audit.tar"
+# As in setup, the service's container user must own the journal, or SQLite cannot open it.
+as_service podman unshare chown -R 10001:10001 \
+  "$(as_service podman volume inspect "$DRILL" --format '{{.Mountpoint}}')"
 RESTORED=$(verify "$DRILL")
 if [ -n "$LIVE" ] && [ "$RESTORED" = "$LIVE" ]; then
   pass "restored copy verifies and matches the live journal"
