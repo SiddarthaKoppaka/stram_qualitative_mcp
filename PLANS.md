@@ -1,7 +1,7 @@
 # Stram Qualitative MCP: plan
 
-Status on 2026-11-02: M0 to M5 are done. A loopback demonstration runs on the data host. M6 is in
-progress: the Keycloak side exists, and the service has not yet been switched to it.
+Status on 2026-11-03: M0 to M5 are done. M6 is in progress: the service runs in private staging on
+the tailnet with Keycloak logins, and its login and scope checks pass. The rest of the checklist remains.
 
 This service gives agents read-only access to Stram's News & Intelligence data over MCP. It follows
 [`stram_quant_mcp`](https://github.com/SiddarthaKoppaka/stram_quant_mcp) and keeps its security model.
@@ -231,8 +231,23 @@ staging realm: `stram-qual-smoke` (discover, read, analytics), `stram-qual-text`
 `qual:text` is never in a default token. On the data host, a test container trusted the issuer's
 certificate and matched its metadata and signing key (RS256). The service, run with staging settings
 on the synthetic lake, published login details naming its own URL and the realm, and refused calls
-without a valid token. Not yet done: the switch on the host, `m6_check.py` through the tailnet, and the
-rest of the [checklist](docs/OPERATIONS.md#m6-staging-checklist).
+without a valid token.
+
+**M6 staging evidence (2026-11-03).** The service runs in `staging` mode, published on its own tailnet
+HTTPS port through Tailscale Serve, with the Quant routes unchanged. From a laptop on the tailnet,
+`m6_check.py` passed all 23 checks at 05:42 UTC: each client's token is for this service with exactly
+its scopes; no token, a malformed token and a broken signature get 401; a wrong Host gets 421 and a
+foreign Origin 403; all five tools are listed and authorized calls succeed; the smoke client cannot read
+articles, the text client cannot search, and the discovery-only client can call only coverage.
+
+An earlier run failed one check: every article read passed the 10 s deadline. It ran two lake-wide
+scans over about 7,570 Parquet files, taking about 14 s; the memory and thread caps were not the cause.
+Running compaction early brought the active set to 53 files and the article read under 1 s. The
+repeated timeouts hit the worker's restart limit, and a plain `systemctl restart` then failed because
+stopping the container stops the pod; [Operations](docs/OPERATIONS.md) now restarts from the pod.
+
+Not yet done: the rest of the [checklist](docs/OPERATIONS.md#m6-staging-checklist), including firewall
+egress, write-denial and seccomp evidence, audit backup and restore, rollback, and alerts.
 
 **M4 evidence (2026-11-02).** `qual_search_news` returns one row per story by default, on `stram_data`
 1.7.0 (`e21f320`). Across 30 random days from 2021 to 2026, 35,107 of 35,110 story IDs match
