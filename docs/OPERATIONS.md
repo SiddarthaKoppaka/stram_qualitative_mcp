@@ -59,12 +59,14 @@ with 421.
 **Service user:**
 
 ```bash
-qual systemctl --user restart stram-qual-mcp.service
 qual systemctl --user stop stram-qual-mcp.service stram-qual-pod.service
-qual systemctl --user start stram-qual-pod.service stram-qual-mcp.service
+qual systemctl --user start stram-qual-pod.service
+qual systemctl --user start stram-qual-mcp.service
 ```
 
-In demo mode, start `stram-qual-jwks.service` after the pod as well. Stopping it does not affect the News pipelines, which do not depend on it.
+Use this to restart as well. A plain `restart` of the service fails with "A dependency job failed",
+because stopping the container takes the pod down with it. In demo mode, start
+`stram-qual-jwks.service` after the pod as well. Stopping it does not affect the News pipelines, which do not depend on it.
 
 ## Update to a new version
 
@@ -121,12 +123,13 @@ To verify the chain, stop the service first, so nothing writes while it checks.
 **Service user:**
 
 ```bash
-qual systemctl --user stop stram-qual-mcp.service
+qual systemctl --user stop stram-qual-mcp.service stram-qual-pod.service
 qual podman run --rm --read-only --network none \
   --volume stram-qual-audit:/audit \
   --secret stram-qual-audit-key,type=mount,target=audit-key,uid=10001,gid=10001,mode=0400 \
   --entrypoint /opt/venv/bin/python localhost/stram-qualitative-mcp:m5 \
   -m stram_qualitative_mcp.audit verify --db /audit/audit.sqlite3 --key-file /run/secrets/audit-key
+qual systemctl --user start stram-qual-pod.service
 qual systemctl --user start stram-qual-mcp.service
 ```
 
