@@ -90,7 +90,7 @@ fi
 if [ "$MODE" = staging ]; then
   echo "== Keycloak check from inside a container"
   # Fails before anything is restarted if the container cannot trust the issuer or its metadata drifted.
-  as_service podman run --rm --pull=never --read-only --cap-drop=all --security-opt=no-new-privileges \
+  as_service podman run --rm -i --pull=never --read-only --cap-drop=all --security-opt=no-new-privileges \
     --add-host "$PUBLIC_HOST:$HOST_IPV4" --entrypoint /opt/venv/bin/python "$IMAGE" - "$ISSUER_URL" <<'PY'
 import json, ssl, sys, urllib.request
 issuer = sys.argv[1]
