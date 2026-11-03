@@ -23,16 +23,21 @@ worker is up, and versions match. Neither needs a token or exposes detail. For a
 **Service user:**
 
 ```bash
-qual systemctl --user status stram-qual-mcp.service stram-qual-jwks.service
+qual systemctl --user status stram-qual-mcp.service
 qual journalctl --user -u stram-qual-mcp.service -n 50 --no-pager
 qual podman ps
 ```
 
-Logs are structured JSON. They never hold tokens, arguments, results or paths.
+Logs are structured JSON. They never hold tokens, arguments, results or paths. In demo mode,
+`stram-qual-jwks.service` also runs; staging has no such service.
 
 ## Connect from a laptop
 
-Open the tunnel and leave it running. Set `SERVER` to the account and host, such as `me@my-server`:
+**In staging,** connect to `https://HOST:8443/mcp` from a machine on the tailnet, with a token from
+the Keycloak realm's `client_credentials` grant. Ask for `qual:text` explicitly; no default token holds
+it. [m6_check.py](../tools/m6_check.py) shows the whole exchange.
+
+**In demo mode,** open the tunnel and leave it running. Set `SERVER` to the account and host, such as `me@my-server`:
 
 ```bash
 ssh -N -L 8801:127.0.0.1:8801 "$SERVER"
@@ -55,11 +60,11 @@ with 421.
 
 ```bash
 qual systemctl --user restart stram-qual-mcp.service
-qual systemctl --user stop stram-qual-mcp.service stram-qual-jwks.service
-qual systemctl --user start stram-qual-jwks.service stram-qual-mcp.service
+qual systemctl --user stop stram-qual-mcp.service stram-qual-pod.service
+qual systemctl --user start stram-qual-pod.service stram-qual-mcp.service
 ```
 
-Stopping it does not affect the News pipelines, which do not depend on it.
+In demo mode, start `stram-qual-jwks.service` after the pod as well. Stopping it does not affect the News pipelines, which do not depend on it.
 
 ## Update to a new version
 
@@ -79,7 +84,8 @@ the lake, so a new image can only read what the pipeline has written.
 | `curl` cannot connect | The container is stopped | Check status and logs, then restart |
 | `not_ready` | Audit or worker problem | Read the logs. See [Audit](#audit) if the audit check failed |
 | Client gets 401 | The token expired | Issue a new one. Also check the host clock |
-| Client gets 421 | The URL host is wrong | Use `127.0.0.1:8801` |
+| Client gets 421 | The URL host is wrong | Use `127.0.0.1:8801` in demo mode, the tailnet URL in staging |
+| Every staging call gets 401 | Wrong audience or scopes, or Keycloak unreachable | Check the token's `aud`, then the Keycloak check in step 7 of [Deployment](../deploy/README.md#7-switch-to-staging) |
 | `unavailable` on every tool | The mounts are missing or the lake moved | `findmnt /srv/stram-qual/news/parquet`, then `sudo systemctl restart` that mount |
 | Results stop at an old date | The pipeline stalled | Check the News services; this service only reads |
 | Slow searches | Too many small Parquet files | Check compaction ran; see below |
@@ -150,7 +156,8 @@ If you lost the key, or need to replace it, stop the service, move the old volum
 
 - The service only reads. Never make the mounts writable, or run it as the account that owns the lake.
 - Never give `stram-qual` access to the raw archive.
-- Never publish the port beyond loopback. The demonstration uses plain HTTP and a test login.
+- Never publish the port beyond loopback in demo mode, which uses plain HTTP and a test login. Staging
+  publishes it only on the tailnet, through Tailscale Serve.
 - Never pass secrets as command-line arguments or put them in the settings file.
 
 ## M6 staging checklist

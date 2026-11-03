@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- M6 preparation: `setup_host.sh` takes a mode. `demo` keeps the loopback demonstration, and `staging`
+  uses the shared Keycloak realm, its own audience and a tailnet HTTPS port, after checking from a
+  container that the issuer is trusted. Add `deploy/staging.env.example` and `tools/m6_check.py`.
+  The script's arguments change: `demo` now comes before the JWKS file.
 - M4: `qual_search_news` returns one row per story by default, with `story_id` and `copies`, and the
   timeline gains `stories`. Pin `stram_data` 1.7.0. The worker limit rises to 4 GB, with half for
   DuckDB and 4 threads, which fixes `unavailable` on repeated calls in a long-running worker.

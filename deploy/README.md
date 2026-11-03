@@ -1,8 +1,9 @@
 # Deployment
 
-This installs the loopback demonstration on a Linux server that holds the News lake. It runs the
-service as a rootless container, with a read-only view of the data, on `127.0.0.1:8801`. You reach it
-through an SSH tunnel. Staging is separate; see [the M6 checklist](../docs/OPERATIONS.md#m6-staging-checklist).
+This installs the service on a Linux server that holds the News lake. It runs as a rootless
+container, with a read-only view of the data, on `127.0.0.1:8801`. Steps 1 to 6 set up the loopback
+demonstration, which you reach through an SSH tunnel. Step 7 switches it to staging, with Keycloak
+logins over private HTTPS; see also [the M6 checklist](../docs/OPERATIONS.md#m6-staging-checklist).
 
 Steps 1 to 6 were run on the real host on 2026-11-01, except that step 5's job has not yet had its
 first scheduled run. [Remove it](#remove-it) has not been tested. Commands marked **sudo** need an
@@ -26,7 +27,7 @@ News lake folder, the one holding `parquet/` and `bodies/`.
 | Read-only mounts under `/srv/stram-qual/news/` | Gives it `parquet` and `bodies` only, never the raw archive |
 | Podman volume `stram-qual-audit` | Holds the audit journal |
 | Podman secret `stram-qual-audit-key` | Signs the audit journal |
-| Pod `stram-qual`, with two containers | The service, and a small server for the public signing key |
+| Pod `stram-qual` | The service. The demonstration adds a small server for its public signing key |
 | Files in `~stram-qual/.config/` | Service settings and the public key |
 
 ## 1. Build the image
@@ -72,10 +73,10 @@ Expected: `token written, valid for 60 minutes`.
 **sudo.** Read [setup_host.sh](setup_host.sh) first:
 
 ```bash
-sudo bash deploy/setup_host.sh "$LAKE" /tmp/stram-qualitative-mcp.tar /tmp/stram-qual-jwks.json
+sudo bash deploy/setup_host.sh "$LAKE" /tmp/stram-qualitative-mcp.tar demo /tmp/stram-qual-jwks.json
 ```
 
-Expected: it ends with `Setup finished. Only 127.0.0.1:8801 is published.` and shows
+Expected: it ends with `Setup finished in demo mode. Only 127.0.0.1:8801 is published.` and shows
 `stram-qual-mcp.service` as active.
 
 Running it again is safe, and that is also how you update the service. It keeps the user, audit
@@ -109,12 +110,50 @@ listening, then mount options starting with `ro`.
 
 To connect and to run it day to day, see [Operations](../docs/OPERATIONS.md).
 
+## 7. Switch to staging
+
+**Not yet run on the host.** Staging replaces the test login with the shared Keycloak realm and
+publishes the service on the tailnet. Tailscale provides the HTTPS certificate. You need the realm
+set up with this service's audience and `qual:*` scopes, and its client secrets.
+
+1. Copy [staging.env.example](staging.env.example) to a root-owned file outside the repository, such
+   as `/etc/stram-qual/staging.env`, and fill it in. It names a private host, so never commit it.
+2. **sudo.** Switch the service. It checks that the container trusts Keycloak before restarting
+   anything, and stops the demonstration key server:
+
+   ```bash
+   sudo bash deploy/setup_host.sh "$LAKE" /tmp/stram-qualitative-mcp.tar staging /etc/stram-qual/staging.env
+   ```
+
+   Expected: `Keycloak reachable from the container, with a trusted certificate.`, then
+   `Setup finished in staging mode.`
+3. **sudo.** Publish it on the tailnet, on the port from the settings file:
+
+   ```bash
+   sudo tailscale serve --bg --https=8443 http://127.0.0.1:8801
+   tailscale serve status
+   ```
+
+4. From a laptop on the tailnet, with each client secret in its own file:
+
+   ```bash
+   uv run python tools/m6_check.py --endpoint "https://$HOST:8443/mcp" \
+     --issuer "https://$HOST/realms/stram-staging" --smoke-secret-file smoke.secret \
+     --text-secret-file text.secret --discovery-secret-file discovery.secret
+   ```
+
+   Expected: every line starts with `PASS`, then `all checks passed`.
+
+**To go back to the demonstration,** run `sudo tailscale serve --https=8443 off`, then step 4 in
+demo mode. Neither mode touches the audit journal or the lake.
+
 ## Remove it
 
 **sudo. Not yet tested.** This deletes the audit journal and key. Back them up first if you may need them; see
 [Operations](../docs/OPERATIONS.md#audit).
 
 ```bash
+sudo tailscale serve --https=8443 off
 sudo -u stram-qual XDG_RUNTIME_DIR="/run/user/$(id -u stram-qual)" \
   systemctl --user stop stram-qual-mcp.service stram-qual-jwks.service stram-qual-pod.service
 sudo systemctl disable --now 'srv-stram\x2dqual-news-parquet.mount' 'srv-stram\x2dqual-news-bodies.mount'

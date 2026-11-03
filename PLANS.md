@@ -1,6 +1,7 @@
 # Stram Qualitative MCP: plan
 
-Status on 2026-11-02: M0 to M5 are done. A loopback demonstration runs on the data host.
+Status on 2026-11-02: M0 to M5 are done. A loopback demonstration runs on the data host. M6 is in
+progress: the Keycloak side exists, and the service has not yet been switched to it.
 
 This service gives agents read-only access to Stram's News & Intelligence data over MCP. It follows
 [`stram_quant_mcp`](https://github.com/SiddarthaKoppaka/stram_quant_mcp) and keeps its security model.
@@ -185,14 +186,17 @@ pipeline job.
 
 ## 7. Deployment
 
-Quant MCP is not deployed. It is waiting for Keycloak, private TLS and a reviewed image digest.
+Quant MCP runs in private staging on the tailnet, with Keycloak, since 2026-11-02. Its rollback and
+recovery checks are still pending.
 
 **MVP (M5).** Runs on the data host on a loopback port, on the real lake. It uses the
 integration-test identity setup and is reached through an SSH tunnel. This is a working demonstration,
 not staging.
 
-**Staging (M6).** Follows Quant's setup once its Keycloak work lands: same issuer, its own audience, its
-own `qual:*` client scopes.
+**Staging (M6).** Follows Quant's setup: the same Keycloak realm and tenant, with its own audience
+and `qual:*` client scopes. The audience is the service's own URL, on its own tailnet HTTPS port
+through Tailscale Serve, so it shares nothing with Quant's routes. `setup_host.sh` has a `staging`
+mode, and `tools/m6_check.py` checks it from a laptop.
 
 Both need an administrator on the data host, because the lake is readable only by its owner:
 
@@ -219,7 +223,16 @@ Implement one reviewed milestone at a time and record evidence here.
 | M5 | Real lake on the data host, loopback only | Budgets in section 9 met on the live lake; pipelines unaffected |
 | M6 | Staging with Keycloak | Quant's M6 acceptance checks pass for this service |
 
-M6 remains, and waits on Keycloak.
+M6 remains.
+
+**M6 progress (2026-11-02).** The Quant owner created the `qual:*` scopes and three clients in the
+staging realm: `stram-qual-smoke` (discover, read, analytics), `stram-qual-text` (discover, text) and
+`stram-qual-discovery-only`. Their check confirmed the token claims, audience isolation, and that
+`qual:text` is never in a default token. On the data host, a test container trusted the issuer's
+certificate and matched its metadata and signing key (RS256). The service, run with staging settings
+on the synthetic lake, published login details naming its own URL and the realm, and refused calls
+without a valid token. Not yet done: the switch on the host, `m6_check.py` through the tailnet, and the
+rest of the [checklist](docs/OPERATIONS.md#m6-staging-checklist).
 
 **M4 evidence (2026-11-02).** `qual_search_news` returns one row per story by default, on `stram_data`
 1.7.0 (`e21f320`). Across 30 random days from 2021 to 2026, 35,107 of 35,110 story IDs match
