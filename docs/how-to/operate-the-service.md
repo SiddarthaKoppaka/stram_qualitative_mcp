@@ -67,8 +67,19 @@ journal. The `m5` image is the hand-wired server from before the FastMCP move; i
 
 ## Back up and verify the audit journal
 
-[Check staging](check-staging.md#2-check-the-host) backs up, verifies and restores the journal in one
-step. To only verify it, stop the service first so nothing writes while it checks:
+A daily timer backs the journal up while the service runs, verifies the copy, and keeps 30 days in
+`/var/backups/stram-qual/`. To install it, or to change which account copies backups off the host:
+
+```bash
+sudo bash deploy/install_audit_backup_timer.sh siddu
+```
+
+Expected: a line starting `audit backup` and ending with the checkpoint, then the timer's next run. To
+take a backup now, run `sudo systemctl start stram-qual-audit-backup.service`, and read the result with
+`journalctl -u stram-qual-audit-backup.service -n 3`.
+
+[Check staging](check-staging.md#2-check-the-host) also backs up, verifies and restores the journal. To
+only verify the live journal, stop the service first so nothing writes while it checks:
 
 **Service user:**
 
@@ -88,6 +99,20 @@ or truncate the journal. If verification fails, keep the files and treat it as a
 
 To replace a lost key, stop the service, move the old volume aside, and run
 [setup_host.sh](../../deploy/setup_host.sh) again, which creates a new journal and key.
+
+## Copy the audit backups off the host
+
+Once a week, from your laptop, copy the latest backup, its checkpoint and the key into a folder only
+you can read. In PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force $HOME\.stram-qual\backups
+scp -i $HOME\.ssh\stram_siddu "siddu@SERVER:/var/backups/stram-qual-outbox/*" $HOME\.stram-qual\backups\
+```
+
+Each copy replaces the last, so keep older ones by renaming the folder if you need them. The key lets
+anyone holding it forge a matching journal, so keep that folder private and never commit or share it.
+The checkpoint alone is enough to prove the journal has not been rewritten since.
 
 ## Check compaction
 
