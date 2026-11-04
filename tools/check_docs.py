@@ -114,6 +114,21 @@ def check_links(files: list[Path]) -> list[str]:
     return problems
 
 
+def check_index() -> list[str]:
+    """Return every page under docs/ that the documentation index does not link to."""
+    index = ROOT / "docs" / "README.md"
+    linked = {
+        (index.parent / target.partition("#")[0]).resolve()
+        for target in LINK.findall(index.read_text())
+        if target.partition("#")[0]
+    }
+    return [
+        f"{path.relative_to(ROOT)}: not linked from docs/README.md"
+        for path in sorted((ROOT / "docs").rglob("*.md"))
+        if path != index and path.resolve() not in linked
+    ]
+
+
 def check_commands(files: list[Path]) -> list[str]:
     with (ROOT / "pyproject.toml").open("rb") as handle:
         known = set(tomllib.load(handle)["project"]["scripts"]) | EXTERNAL_COMMANDS
@@ -183,6 +198,7 @@ def main() -> int:
     diagrams, diagram_count = check_mermaid(files)
     results = {
         "links": check_links(files),
+        "index": check_index(),
         "commands": check_commands(files),
         "secrets": check_secrets(files),
         "examples": examples,

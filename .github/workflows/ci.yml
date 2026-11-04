@@ -37,6 +37,8 @@ jobs:
         run: uv run mypy
       - name: Lint and format
         run: uv run ruff check . && uv run ruff format --check .
+      - name: Import boundaries
+        run: uv run lint-imports
       - name: Contract and schema drift
         run: uv run python -m stram_qualitative_mcp.tools.export_schema --check
       - name: Documentation links, examples, commands and hygiene
@@ -46,7 +48,7 @@ jobs:
       - name: Secret gate
         run: >-
           uv run detect-secrets scan --all-files
-          --exclude-files '(^|/)(\.git|\.venv|\.mypy_cache|\.pytest_cache|\.ruff_cache|build|contracts|stram_data|tests/fixtures|uv\.lock)(/|$)'
+          --exclude-files '(^|/)(\.git|\.venv|\.mypy_cache|\.pytest_cache|\.ruff_cache|\.grimp_cache|\.import_linter_cache|build|contracts|stram_data|tests/fixtures|uv\.lock)(/|$)'
           | uv run python tools/check_secret_scan.py
       - name: License gate
         run: uv run pip-licenses --format=json | uv run python tools/check_licenses.py

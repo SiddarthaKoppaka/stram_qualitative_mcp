@@ -18,11 +18,14 @@ What is missing between the service today and the full vision in [PLANS.md](../P
 ## Not yet proven
 
 - **Surviving a reboot.** The service is set to start with its user session, but no reboot was tested.
-- **The `sudo` commands in [Operations](OPERATIONS.md) and removal steps in
-  [Deployment](../deploy/README.md#remove-it).** They were written from the setup script, not yet run.
-- **The compaction timer.** Its first run is Sunday 2026-11-08. It stops the Parquet sink for a few
-  minutes, and restarts it.
-- **The M6 checklist** in [Operations](OPERATIONS.md#m6-staging-checklist).
+- **Removing the service.** The removal steps in [Deploy the service](how-to/deploy-the-service.md#remove-it)
+  have not been run. The restart and audit commands in [Operate the service](how-to/operate-the-service.md)
+  have.
+- **The compaction timer.** A manual run on 2026-11-03 worked and made article reads fast again. The
+  timer's first scheduled run is Sunday 2026-11-08; weekly may be too rare.
+- **The open items** in [the staging checklist](reference/staging-checklist.md).
+- **Some FastMCP behaviors with real Keycloak tokens.** The denial throttle is covered by tests, not
+  yet exercised through the tailnet.
 
 ## Limits to keep in mind
 
@@ -38,4 +41,4 @@ What is missing between the service today and the full vision in [PLANS.md](../P
 - **Classic CI token.** `STRAM_DATA_READ_TOKEN` is currently a broad classic token. Replace it with a
   read-only token from the `stram_data` owner.
 - **Security exception.** PyArrow carries an accepted risk that expires on 2027-01-31; see
-  [Security exceptions](SECURITY_EXCEPTIONS.md).
+  [Security exceptions](reference/security-exceptions.md).

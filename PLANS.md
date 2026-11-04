@@ -140,7 +140,7 @@ reading it, and filtering cannot reliably catch that. So:
   `content_trust: "untrusted_external"`.
 - Control and zero-width characters are removed from `untrusted_text`. This reduces hidden text and does
   not make the text safe.
-- Client guidance in `docs/TOOLS.md` tells consumers to treat it as data. The MCP cannot enforce that.
+- Client guidance in `docs/reference/tools.md` tells consumers to treat it as data. The MCP cannot enforce that.
 - `qual:text` is a separate scope, so a client can search without ever receiving article bodies.
 - The service never fetches `url`. The body fetcher honours `robots.txt` and paywalls; a consumer would
   not.
@@ -244,7 +244,7 @@ An earlier run failed one check: every article read passed the 10 s deadline. It
 scans over about 7,570 Parquet files, taking about 14 s; the memory and thread caps were not the cause.
 Running compaction early brought the active set to 53 files and the article read under 1 s. The
 repeated timeouts hit the worker's restart limit, and a plain `systemctl restart` then failed because
-stopping the container stops the pod; [Operations](docs/OPERATIONS.md) now restarts from the pod.
+stopping the container stops the pod; [Operate the service](docs/how-to/operate-the-service.md) now restarts from the pod.
 
 `m6_evidence.sh`, run on the host at 05:50 UTC, passed all 17 checks: the service user and the container
 cannot write `parquet`, `bodies` or the container's root; the query worker shows `Seccomp: 2`, one filter

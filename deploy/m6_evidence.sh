@@ -9,7 +9,7 @@ set -uo pipefail
 SERVICE_USER=stram-qual
 VIEW=/srv/stram-qual/news
 PORT=8801
-IMAGE=localhost/stram-qualitative-mcp:m5
+IMAGE=${IMAGE:-localhost/stram-qualitative-mcp:m7}
 CONTAINER=systemd-stram-qual-mcp
 PROBE=.m6-write-probe
 

@@ -1,7 +1,8 @@
-# Onboarding
+# Getting started
 
-This takes you from nothing to a running service and all five tools answering, in about ten minutes.
-It uses invented data and a throwaway login, so you need no server, secrets or real data.
+In this tutorial you run the service on your own machine and make your first authenticated tool calls.
+It takes about ten minutes. It uses invented data and a throwaway login, so you need no server, secrets
+or real data.
 
 ## What you need
 
@@ -46,10 +47,10 @@ MCP endpoint: http://127.0.0.1:8765/mcp
 Token, valid for one hour: .../.local/token
 ```
 
-This is the real server, with real login checks, audit and worker isolation. Only two things are
-stand-ins. The data is the invented lake in `tests/fixtures/news/`, and instead of a login server the
-script makes a temporary signing key, serves its public half on port 8766, and writes a one-hour
-token. Everything it creates is in `.local/`, which Git ignores.
+This is the real FastMCP server, with real login checks, audit and worker isolation. Only two things
+are stand-ins. The data is the invented lake in `tests/fixtures/news/`, and instead of a login server
+the script makes a temporary signing key, serves its public half on port 8766, and writes a one-hour
+token holding all four scopes. Everything it creates is in `.local/`, which Git ignores.
 
 Leave it running. To get a new token, stop it with Ctrl+C and start it again.
 
@@ -74,7 +75,7 @@ timeline AAPL: 3 days
 article: read 4000 of 9120 chars
 ```
 
-That confirms the whole path: client, login, permissions, worker, Data Interface and Parquet.
+You have now used the whole path: client, login, permissions, worker, Data Interface and Parquet.
 
 Requests without a valid token are refused. This should print `401`:
 
@@ -91,53 +92,10 @@ claude mcp add --transport http stram-qual http://127.0.0.1:8765/mcp \
   --header "Authorization: Bearer $(cat .local/token)"
 ```
 
-Then ask something like "What news do we have on AAPL in October 2026?" Remember that the data is
-invented, and that the token lasts an hour. See [How to consume](HOWTO_CONSUME.md) for other clients.
+Then ask something like "What news do we have on AAPL in October 2026?" The data is invented, and the
+token lasts an hour.
 
-## 5. Run the checks
-
-These are the checks CI runs on every push to `main`:
-
-```bash
-uv run pytest --cov --cov-report=term-missing
-uv run mypy
-uv run ruff check .
-uv run ruff format --check .
-uv run python -m stram_qualitative_mcp.tools.export_schema --check
-uv run python tools/check_docs.py
-```
-
-CI also runs the dependency, secret and license checks, then builds the image and tests it. It needs
-the `STRAM_DATA_READ_TOKEN` Actions secret to read `stram_data`.
-
-To change the test data, edit `tests/support/build_news_fixture.py` and rebuild it. Keep it invented,
-because this repository is public:
-
-```bash
-uv run python tests/support/build_news_fixture.py
-```
-
-## Changing the code
-
-**To add a tool:**
-
-1. Add its input and output models to `tool_models.py`.
-2. Add it to `TOOL_SPECS` in `tool_registry.py`, with one scope and a deadline.
-3. Call the Data Interface from `tool_adapter.py`. Do not add SQL or news logic here.
-4. Add tests, including rejected inputs in `tests/security/test_resource_budgets.py`.
-5. Update the schema file and [the tool reference](TOOLS.md):
-
-   ```bash
-   uv run python -m stram_qualitative_mcp.tools.export_schema
-   ```
-
-**To move to a new `stram_data` release:** update the commit in `pyproject.toml`,
-`.github/workflows/ci.yml` and `tools/prepare_container_dependency.sh`. Update the version in
-`worker.py`, the `Dockerfile` and `tools/prepare_container_dependency.sh`. Then rename and refresh the
-snapshot in `contracts/`, point `tests/contract/test_data_interface_release.py` at it, and run
-`uv lock --upgrade-package stram-data`.
-
-## Troubleshooting
+## If a step fails
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
@@ -146,12 +104,11 @@ snapshot in `contracts/`, point `tests/contract/test_data_interface_release.py` 
 | Client gets 401 | The token expired, or the server restarted | Each start makes a new key. Restart if needed, then use the new `.local/token` |
 | Client gets 421 | The URL's host differs from the allowed one | Use `127.0.0.1`, not `localhost` |
 | Readiness stays `not_ready` | The worker or audit failed to start | Read the server's output. If the audit check failed, stop it and delete `.local/` |
-| A tool returns `forbidden` | The token lacks that tool's scope | See [the tool reference](TOOLS.md). The local token has all four |
 | Tests fail on Windows | Linux-only isolation tests | Use WSL |
 | Connection refused | The server is not running | Start it, and wait for `{"status":"ready"}` |
 
 ## Next
 
-- [How to consume](HOWTO_CONSUME.md) for using the tools well.
-- [Architecture](ARCHITECTURE.md) for how a request is handled.
-- [Deployment](../deploy/README.md) to run it on a server against real data.
+- [Connect a client](../how-to/connect-a-client.md) to use the tools from code or another agent.
+- [About the architecture](../explanation/architecture.md) to see how a request is handled.
+- [Run the quality gates](../how-to/run-the-quality-gates.md) before changing the code.

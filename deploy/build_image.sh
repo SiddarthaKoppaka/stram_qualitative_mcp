@@ -8,7 +8,7 @@ set -eu
 [ $# -ge 1 ] || { echo "Usage: sh $0 STRAM_DATA_CHECKOUT [OUTPUT_TAR]" >&2; exit 1; }
 SOURCE=$1
 OUTPUT=${2:-/tmp/stram-qualitative-mcp.tar}
-IMAGE=localhost/stram-qualitative-mcp:m5
+IMAGE=${IMAGE:-localhost/stram-qualitative-mcp:m7}
 
 sh tools/prepare_container_dependency.sh "$SOURCE"
 podman build --pull=missing --build-arg VCS_REF="$(git rev-parse HEAD)" -t "$IMAGE" .

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- M7: serve the tools with FastMCP 4.1.6, ported from the Quant MCP. **Client-visible changes:**
+  denials are `access_denied` with the message "Access denied."; every error carries
+  `_meta["io.stram/error"]` with `code` and `retryable`; `tools/list` shows only the tools a token's
+  scopes allow; a caller denied five times in 60 seconds is throttled; request bodies over 1 MiB get
+  413. The five tool contracts and schema hashes are unchanged. The hand-wired server is on the
+  `old-mcp-archive` branch. Add an online audit `backup` command, the readability lint rules and
+  import layers, the image tag `m7` with an `IMAGE` override for rollbacks, and an index check in
+  `tools/check_docs.py`. The documentation is reorganized into tutorials, how-to guides, reference and
+  explanation.
 - M6 preparation: `setup_host.sh` takes a mode. `demo` keeps the loopback demonstration, and `staging`
   uses the shared Keycloak realm, its own audience and a tailnet HTTPS port, after checking from a
   container that the issuer is trusted. Add `deploy/staging.env.example` and `tools/m6_check.py`.

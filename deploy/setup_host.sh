@@ -4,13 +4,14 @@
 #   sudo bash setup_host.sh NEWS_ROOT IMAGE_TAR staging AUTH_FILE   Keycloak staging (M6)
 # NEWS_ROOT holds parquet/ and bodies/. The raw archive beside them is never mounted.
 # AUTH_FILE holds the settings in staging.env.example. Running it again is safe, and switches mode:
-# an existing user, secret or volume is kept.
+# an existing user, secret or volume is kept. IMAGE names the image inside IMAGE_TAR; to deploy
+# another release, such as a rollback, run it as: sudo env IMAGE=localhost/...:TAG bash setup_host.sh ...
 set -euo pipefail
 
 SERVICE_USER=stram-qual
 VIEW=/srv/stram-qual/news
 PORT=8801
-IMAGE=localhost/stram-qualitative-mcp:m5
+IMAGE=${IMAGE:-localhost/stram-qualitative-mcp:m7}
 
 [ "$(id -u)" -eq 0 ] || { echo "Run with sudo." >&2; exit 1; }
 [ $# -eq 4 ] && { [ "$3" = demo ] || [ "$3" = staging ]; } \

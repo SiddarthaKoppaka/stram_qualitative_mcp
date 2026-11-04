@@ -19,4 +19,4 @@ This repository is the independently deployed MCP Tool Plane for Stram's News & 
 Upstream references are in `stram_data`: `docs/news/`, ADR 002 and `docs/quant/DATA_INTERFACE.md`.
 
 Start repository work from [README.md](README.md) and [docs/README.md](docs/README.md). Deployment
-steps are in [deploy/README.md](deploy/README.md). Do not copy those details into this file.
+steps are in [Deploy the service](docs/how-to/deploy-the-service.md). Do not copy those details into this file.

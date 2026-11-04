@@ -13,3 +13,5 @@ vendor/
 *.db
 *.sqlite3
 .local/
+.grimp_cache/
+.import_linter_cache/
