@@ -28,12 +28,14 @@ NoNewPrivileges=true
 PrivateTmp=true
 EOF
 
+# Daily: Finnhub text updates add about 150 small files an hour, and a week of them made article
+# reads pass their 10 s deadline. Each run pauses the Parquet sink for a few minutes.
 cat > "$UNITS/stram-news-compact.timer" <<EOF
 [Unit]
-Description=Compact news Parquet every Sunday
+Description=Compact news Parquet daily
 
 [Timer]
-OnCalendar=Sun 07:23
+OnCalendar=*-*-* 07:23
 Persistent=true
 
 [Install]

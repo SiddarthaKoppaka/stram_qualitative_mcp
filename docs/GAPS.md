@@ -31,8 +31,13 @@ What is missing between the service today and the full vision in [PLANS.md](../P
   took 4.3 s against 2 s. One-year ticker searches occasionally pass the 10 s deadline: 2 of 72 calls in a
   repeated run. The cause is not known. Re-measure once compaction has run. After three failures in a row,
   the worker stops restarting until the service is restarted.
-- **File build-up between compactions.** About a week of small files made every article read pass its
-  10 s deadline; compaction fixed it. The weekly timer may need to run more often.
+- **File build-up between compactions.** Finnhub's text updates add about 150 small Parquet files an
+  hour. About a week of them made every article read pass its 10 s deadline, and about a day and a half
+  brought reads back to 10 s. Compaction now runs daily. The lasting fixes are in `stram_data`: find an
+  article's text without scanning every file, and batch small updates into fewer files.
+- **Disk swing during compaction.** On 2026-11-04 free space fell by about 50 GB during and just after a
+  run, then recovered within a minute. The cause is not yet known; the desktop file indexer and
+  PostgreSQL's write log are the suspects.
 - **Disk.** Compaction keeps the old Parquet files, about 2.5 GB last time, until someone removes them.
   The removal needs the data owner's approval.
 - **One worker.** Queries run one at a time, so a few slow calls delay the rest.
