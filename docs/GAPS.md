@@ -24,8 +24,6 @@ What is missing between the service today and the full vision in [PLANS.md](../P
 - **The compaction timer.** A manual run on 2026-11-03 worked and made article reads fast again. The
   timer's first scheduled run is Sunday 2026-11-08; weekly may be too rare.
 - **The open items** in [the staging checklist](reference/staging-checklist.md).
-- **Some FastMCP behaviors with real Keycloak tokens.** The denial throttle is covered by tests, not
-  yet exercised through the tailnet.
 
 ## Limits to keep in mind
 

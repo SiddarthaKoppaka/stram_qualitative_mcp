@@ -1,7 +1,8 @@
 # Stram Qualitative MCP: plan
 
-Status on 2026-11-03: M0 to M5 are done. M6 is in progress: the service runs in private staging on
-the tailnet with Keycloak logins, and its login and scope checks pass. The rest of the checklist remains.
+Status on 2026-11-04: M0 to M5 and M7 are done. The service runs on FastMCP in private staging on the
+tailnet, with Keycloak logins. M6 is in progress: its technical checks and a rollback drill pass, and
+the firewall, retention, alerts, release provenance and licensing remain.
 
 This service gives agents read-only access to Stram's News & Intelligence data over MCP. It follows
 [`stram_quant_mcp`](https://github.com/SiddarthaKoppaka/stram_quant_mcp) and keeps its security model.
@@ -222,8 +223,25 @@ Implement one reviewed milestone at a time and record evidence here.
 | M4 | Story collapsing | Story IDs match PostgreSQL on a sample |
 | M5 | Real lake on the data host, loopback only | Budgets in section 9 met on the live lake; pipelines unaffected |
 | M6 | Staging with Keycloak | Quant's M6 acceptance checks pass for this service |
+| M7 | FastMCP server, following the Quant MCP | The ported behavior suite passes; staging checks pass on the new image; rollback to the previous image works |
 
 M6 remains.
+
+**M7 evidence (2026-11-04).** The Quant MCP's FastMCP server and behavior suite were ported, with the
+five tool contracts and schema hashes unchanged; 215 tests pass with 90% branch coverage, and CI is
+green on `main` at `04f6677`. The hand-wired server is on the `old-mcp-archive` branch. Image
+`m7` (`704e592d0d06`, FastMCP 4.1.6, `stram_data` 1.7.0) passed the worker probe and preflight on the
+real lake, read-only. Deployed in staging at 02:14 UTC: `m6_check.py` passed all 25 checks from a
+laptop, with each client listing only its own tools (4, 2 and 1) and denials returning `Access denied.`,
+not retryable. `m6_evidence.sh` passed all 17 host checks; the audit journal carried on from 137 to 160
+records under the same key, last hash
+`206bb2a47af3f5b78910c025e625754cdecb4d4cce3e01c45da981b6a54be05c`. Five denied calls throttled the
+discovery-only client, which then saw no tools and was refused coverage; 62 s later it worked again.
+
+Rollback drill, 02:21 to 02:23 UTC: `setup_host.sh` with `IMAGE=...:m5` and the kept archive brought
+back the hand-wired server, which answered ready, listed all five tools to the smoke client and refused
+with its old message. Running it again with `m7` restored the FastMCP release, and `m6_check.py` passed
+all 25 checks. The lake and journal were untouched throughout.
 
 **M6 progress (2026-11-02).** The Quant owner created the `qual:*` scopes and three clients in the
 staging realm: `stram-qual-smoke` (discover, read, analytics), `stram-qual-text` (discover, text) and
@@ -256,8 +274,8 @@ checkpoint: 137 records, last sequence 137, last hash
 readiness held. The deadline and the restart limit were exercised by the article timeouts above.
 
 Open, with owners needed: the host egress firewall, to plan with the Quant owner because the host is
-shared; a reviewed image digest with provenance and a rollback to an earlier one; agreed audit
-retention; alerts and dashboards; an off-host copy of the audit backup; and a licensing review before
+shared; a reviewed image digest with provenance; agreed audit retention and a backup timer; boot
+persistence, which needs a reboot of the shared host; alerts and dashboards; an off-host copy of the audit backup; and a licensing review before
 anyone outside the team gets `qual:text`.
 
 **M4 evidence (2026-11-02).** `qual_search_news` returns one row per story by default, on `stram_data`
