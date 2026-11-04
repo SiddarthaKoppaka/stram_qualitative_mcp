@@ -7,14 +7,16 @@ import os
 import uvicorn
 from starlette.types import ASGIApp
 
-from stram_qualitative_mcp.server import create_application
+from stram_qualitative_mcp.fastmcp_server import create_fastmcp_application
 from stram_qualitative_mcp.settings import AppSettings
 from stram_qualitative_mcp.telemetry import configure_telemetry
 
 
 def create_from_env() -> ASGIApp:
+    """Build the service from the environment."""
     settings = AppSettings.from_env()
-    return create_application(settings, telemetry=configure_telemetry(settings)).app
+    telemetry = configure_telemetry(settings)
+    return create_fastmcp_application(settings, telemetry=telemetry).app
 
 
 def main() -> None:
