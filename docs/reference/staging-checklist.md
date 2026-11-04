@@ -12,8 +12,8 @@ team until every item has an owner and evidence in [PLANS.md](../../PLANS.md).
 | Host firewall allowing outbound traffic only to the issuer, JWKS and approved telemetry | Open | To plan with the Quant owner, because the host is shared |
 | Unprivileged host and in-container writes to the lake both fail | Done | `m6_evidence.sh` |
 | `/proc` shows the seccomp filter on the query worker during a real call | Done | `m6_evidence.sh` |
-| Audit backup, independent verification, external checkpoint and a restore drill | Done | `m6_evidence.sh`; the backup is still on the same disk |
-| Agreed retention | Open | Proposal: 90 days online, one year archived. The Quant MCP keeps 30 days of backups |
+| Audit backup, independent verification, external checkpoint and a restore drill | Done | `m6_evidence.sh`, and a daily online backup verified on its own; the latest set is copied to a laptop weekly |
+| Agreed retention | Done | 30 days of daily backups on the host, as for the Quant MCP, plus the weekly laptop copy |
 | Overload, deadline, worker crash, restart limit and graceful shutdown exercised | Done | `m6_evidence.sh`, an overload test, and the 2026-11-03 article timeouts |
 | Dashboards, alerts and owners, with telemetry redaction checked | Open | No monitoring system yet |
 | Rollback to the previous release restores readiness without touching the lake or journal | Done | 2026-11-04: `m7` to `m5` and back, checked each way; the images are local tags, not reviewed digests |

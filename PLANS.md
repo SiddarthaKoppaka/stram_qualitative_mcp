@@ -2,7 +2,7 @@
 
 Status on 2026-11-04: M0 to M5 and M7 are done. The service runs on FastMCP in private staging on the
 tailnet, with Keycloak logins. M6 is in progress: its technical checks and a rollback drill pass, and
-the firewall, retention, alerts, release provenance and licensing remain.
+the firewall, boot persistence, alerts, release provenance and licensing remain.
 
 This service gives agents read-only access to Stram's News & Intelligence data over MCP. It follows
 [`stram_quant_mcp`](https://github.com/SiddarthaKoppaka/stram_quant_mcp) and keeps its security model.
@@ -273,9 +273,14 @@ checkpoint: 137 records, last sequence 137, last hash
 `65667b7857c9`. Eight simultaneous calls from the laptop gave seven results and one `overloaded`, and
 readiness held. The deadline and the restart limit were exercised by the article timeouts above.
 
+**Audit backups (2026-11-04).** Retention is 30 days, as for the Quant MCP. A daily root timer takes
+an online backup, verifies the copy against the key and writes a checkpoint; the first run at 02:33 UTC
+verified 186 records, last hash `6e1e4080c26862082c57fced2d0853e0cc7a586d1d81e032c6cdfde9732d7fd5`.
+The latest backup, checkpoint and key are copied to the owner's laptop weekly.
+
 Open, with owners needed: the host egress firewall, to plan with the Quant owner because the host is
-shared; a reviewed image digest with provenance; agreed audit retention and a backup timer; boot
-persistence, which needs a reboot of the shared host; alerts and dashboards; an off-host copy of the audit backup; and a licensing review before
+shared; a reviewed image digest with provenance; boot persistence, which needs a reboot of the shared
+host; alerts and dashboards; an off-host copy of the audit backup; and a licensing review before
 anyone outside the team gets `qual:text`.
 
 **M4 evidence (2026-11-02).** `qual_search_news` returns one row per story by default, on `stram_data`
