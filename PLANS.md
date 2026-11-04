@@ -280,7 +280,7 @@ The latest backup, checkpoint and key are copied to the owner's laptop weekly.
 
 Open, with owners needed: the host egress firewall, to plan with the Quant owner because the host is
 shared; a reviewed image digest with provenance; boot persistence, which needs a reboot of the shared
-host; alerts and dashboards; an off-host copy of the audit backup; and a licensing review before
+host; alerts and dashboards; and a licensing review before
 anyone outside the team gets `qual:text`.
 
 **M4 evidence (2026-11-02).** `qual_search_news` returns one row per story by default, on `stram_data`
