@@ -181,19 +181,33 @@ it is null when no GDELT article backs it. `tone_articles` is how many articles 
 
 ## Errors
 
-A failed tool call returns `isError=true`, a fixed message, and
-`_meta["io.stram/error"]` holding `code` and `retryable`. Errors never expose paths, SQL, dependency
-details or stack traces.
+A failed tool call returns `isError=true`, a readable text, and `_meta["io.stram/error"]` with
+fields a client can branch on. The fields and categories match the Quant MCP, so one client policy
+serves both services ([integration handoff](integration-handoff.md)). Errors never expose paths, SQL,
+dependency details, stack traces or the submitted values.
 
-| Code | Message | Retryable | Meaning |
+| Field | Meaning |
+|---|---|
+| `code` | Stable machine name, below |
+| `category` | Who or what failed; decides whether to retry |
+| `retryable` | Whether retrying can ever help |
+| `reason` | One fixed sentence on why it failed |
+| `next_action` | What the caller or operator should do |
+| `retry_after_seconds` | Present when the service suggests a wait |
+
+| Code | Category | Retryable | Meaning |
 |---|---|---|---|
-| `invalid_request` | The tool arguments are invalid or outside the allowed bounds. | No | Arguments are invalid or out of bounds, or the tool does not exist |
-| `not_found` | The requested qualitative data entity was not found. | No | The article does not exist |
-| `access_denied` | Access denied. | No | The token lacks this tool's scope, or the caller is throttled |
-| `overloaded` | The qualitative service is at capacity. | Yes | The queue is full, or the rate limit was hit |
-| `deadline_exceeded` | The qualitative query exceeded its deadline. | Yes | The query ran out of time; narrow it |
-| `resource_limit` | The qualitative result exceeds the allowed resource budget. | No | The result is too large; narrow the request |
-| `unavailable` | Qualitative data is temporarily unavailable. | Yes | The lake, worker or audit is unavailable |
+| `invalid_request` | `caller_error` | No | Arguments are invalid or out of bounds, or the tool does not exist |
+| `not_found` | `caller_error` | No | The article does not exist |
+| `access_denied` | `access_denied` | No | The token lacks this tool's scope, or the caller is throttled |
+| `overloaded` | `capacity` | Yes, after 5 s | The queue is full, or the rate limit was hit |
+| `deadline_exceeded` | `deadline` | Once | The query ran out of time; narrow it |
+| `resource_limit` | `resource_limit` | No | The result is too large; narrow the request |
+| `unavailable` | `data_plane_unavailable` | Yes, after 5 s | The news lake, worker or audit is unavailable |
+| `internal_error` | `internal` | No | An unexpected failure; report the `request_id` |
+
+The text starts with a fixed message, such as `Access denied.`, followed by the reason, whether
+retrying helps, and the next action.
 
 A caller denied five times within 60 seconds is throttled: every call returns `access_denied` and
 `tools/list` returns nothing until the window passes. Unknown tool names count as denials.

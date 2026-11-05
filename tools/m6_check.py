@@ -213,8 +213,9 @@ async def expect_denied(
     error = (getattr(result, "meta", None) or {}).get(ERROR_META_KEY) or {}
     denied = (
         result.is_error
-        and text == ToolForbiddenError.public_message
+        and text == ToolForbiddenError().caller_text
         and error.get("code") == ToolForbiddenError.code
+        and error.get("category") == ToolForbiddenError.category
         and error.get("retryable") is False
     )
     report.check(f"{caller.label}: {tool} is refused", denied, text or "no error")

@@ -31,6 +31,8 @@ each page has one purpose, so find what you need by asking what you are trying t
 ## Reference
 
 - [Tools](reference/tools.md): contracts, scopes and errors for all five tools.
+- [Integration handoff](reference/integration-handoff.md): what the STRAM API needs to call this
+  service, including the shared error and retry policy.
 - [Configuration](reference/configuration.md): every setting.
 - [Deployment](reference/deployment.md): what the deployment scripts create.
 - [Staging checklist](reference/staging-checklist.md): M6 conditions and their status.

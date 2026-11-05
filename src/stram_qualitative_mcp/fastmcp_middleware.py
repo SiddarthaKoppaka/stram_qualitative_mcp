@@ -58,11 +58,14 @@ DEFAULT_DENIAL_AUDIT = (DENIED, "authorization_denied", ToolForbiddenError.__nam
 
 
 def error_result(error: QualToolError) -> ToolResult:
-    """Build the one safe error reply: a fixed message, plus whether retrying can help."""
+    """Build the one safe error reply: what failed, why, whether retrying helps, and what next.
+
+    The text is for people and models; the same facts are in ``meta`` as fields to branch on.
+    """
     return ToolResult(
-        content=[TextContent(type="text", text=error.public_message)],
+        content=[TextContent(type="text", text=error.caller_text)],
         is_error=True,
-        meta={ERROR_META_KEY: {"code": error.code, "retryable": error.retryable}},
+        meta={ERROR_META_KEY: error.public_details()},
     )
 
 

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Client-visible:** every tool error now carries `category`, `reason`, `next_action` and, when known,
+  `retry_after_seconds` in `_meta["io.stram/error"]`, beside `code` and `retryable`, matching the
+  Quant MCP so one client policy serves both. The error text now adds the reason and next action
+  after the fixed message. Add the STRAM integration handoff. Tool contracts and schema hashes are
+  unchanged.
+
 - Add an optional `view` (`raw` default, `clean`) to `qual_search_news`, `qual_get_filings` and
   `qual_get_article`. The clean view is lossless: cards as one table holding every field, a count of
   kept ticker links under `min_confidence`, article furniture lines flagged by position without

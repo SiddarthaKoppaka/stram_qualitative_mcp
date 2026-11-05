@@ -9,6 +9,7 @@ import pytest
 from starlette.testclient import TestClient
 
 from stram_qualitative_mcp.access_policy import ScopeGrantStore
+from stram_qualitative_mcp.errors import ToolForbiddenError
 from stram_qualitative_mcp.fastmcp_auth import StrictVerifier
 from stram_qualitative_mcp.fastmcp_server import create_fastmcp_application
 from stram_qualitative_mcp.settings import AppSettings
@@ -62,8 +63,8 @@ def test_a_caller_the_store_has_no_grant_for_is_denied_everything(
 
     assert listed == []
     assert called["isError"] is True
-    assert called["content"][0]["text"] == ACCESS_DENIED
-    assert called["_meta"]["io.stram/error"] == {"code": "access_denied", "retryable": False}
+    assert called["content"][0]["text"].startswith(ACCESS_DENIED)
+    assert called["_meta"]["io.stram/error"] == ToolForbiddenError().public_details()
 
 
 def test_a_denied_call_never_reaches_the_worker(
@@ -89,7 +90,7 @@ def test_repeated_denials_block_the_caller_from_every_tool(
     blocked = client.call_tool("qual_describe_coverage", {}, narrow).result
 
     assert allowed_before["isError"] is False
-    assert blocked["content"][0]["text"] == ACCESS_DENIED
+    assert blocked["content"][0]["text"].startswith(ACCESS_DENIED)
     assert client.audit_outcomes()[-1] == "denial_throttled"
 
 
