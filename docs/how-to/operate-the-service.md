@@ -58,12 +58,13 @@ The image bundles its own `stram_data`, so updating it does not touch the pipeli
 Keep the previous release's image archive. To deploy it, name its tag:
 
 ```bash
-sudo env IMAGE=localhost/stram-qualitative-mcp:m5 bash deploy/setup_host.sh "$LAKE" "$PREVIOUS_TAR" staging /etc/stram-qual/staging.env
+sudo env IMAGE=localhost/stram-qualitative-mcp:m7 bash deploy/setup_host.sh "$LAKE" "$PREVIOUS_TAR" staging /etc/stram-qual/staging.env
 ```
 
 Then follow [Check staging](check-staging.md). Rolling back never touches the lake or the audit
-journal. The `m5` image is the hand-wired server from before the FastMCP move; its source is the
-`old-mcp-archive` branch. To return, run step 3 of the deployment again with the current archive.
+journal. The `m7` image is the FastMCP server before the clean view. The `m5` image is the
+hand-wired server from before the FastMCP move; its source is the `old-mcp-archive` branch. To
+return, run step 3 of the deployment again with the current archive.
 
 ## Back up and verify the audit journal
 
@@ -88,7 +89,7 @@ qual systemctl --user stop stram-qual-mcp.service stram-qual-pod.service
 qual podman run --rm --read-only --network none \
   --volume stram-qual-audit:/audit \
   --secret stram-qual-audit-key,type=mount,target=audit-key,uid=10001,gid=10001,mode=0400 \
-  --entrypoint /opt/venv/bin/python localhost/stram-qualitative-mcp:m7 \
+  --entrypoint /opt/venv/bin/python localhost/stram-qualitative-mcp:m8 \
   -m stram_qualitative_mcp.audit verify --db /audit/audit.sqlite3 --key-file /run/secrets/audit-key
 qual systemctl --user start stram-qual-pod.service
 qual systemctl --user start stram-qual-mcp.service

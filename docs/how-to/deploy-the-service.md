@@ -24,7 +24,7 @@ sh deploy/build_image.sh "$HOME/path/to/stram_data"
 ```
 
 Expected: `{"status":"worker_network_isolated"}`, then `Saved /tmp/stram-qualitative-mcp.tar`. The
-image is tagged `localhost/stram-qualitative-mcp:m7`. If a download from `snapshot.debian.org` returns
+image is tagged `localhost/stram-qualitative-mcp:m8`. If a download from `snapshot.debian.org` returns
 503, wait a minute and run it again.
 
 ## 2. Test the image on the real lake
@@ -37,7 +37,7 @@ for check in worker-interface-probe preflight; do
     --mount type=bind,src="$LAKE/parquet",dst=/news/parquet,ro \
     --mount type=bind,src="$LAKE/bodies",dst=/news/bodies,ro \
     --tmpfs /tmp:rw,noexec,nosuid,nodev,size=2g \
-    localhost/stram-qualitative-mcp:m7 "$check"
+    localhost/stram-qualitative-mcp:m8 "$check"
 done
 ```
 

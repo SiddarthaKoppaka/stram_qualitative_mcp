@@ -11,7 +11,7 @@ set -euo pipefail
 SERVICE_USER=stram-qual
 VIEW=/srv/stram-qual/news
 PORT=8801
-IMAGE=${IMAGE:-localhost/stram-qualitative-mcp:m7}
+IMAGE=${IMAGE:-localhost/stram-qualitative-mcp:m8}
 
 [ "$(id -u)" -eq 0 ] || { echo "Run with sudo." >&2; exit 1; }
 [ $# -eq 4 ] && { [ "$3" = demo ] || [ "$3" = staging ]; } \

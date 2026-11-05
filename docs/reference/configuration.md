@@ -59,4 +59,4 @@ issuer and signing key. In staging mode it reads a file shaped like
 | `STRAM_QUAL_ISSUER_URL` | The Keycloak realm URL |
 | `STRAM_QUAL_TENANT_ID` | The tenant, `local-stram` |
 
-The script sets `IMAGE` to `localhost/stram-qualitative-mcp:m7` unless you pass another tag.
+The script sets `IMAGE` to `localhost/stram-qualitative-mcp:m8` unless you pass another tag.

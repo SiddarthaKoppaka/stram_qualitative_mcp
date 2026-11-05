@@ -9,6 +9,7 @@ RUN sed -i \
       -e 's|http://deb.debian.org/debian-security|https://snapshot.debian.org/archive/debian-security/20261105T000000Z|g' \
       -e 's|http://deb.debian.org/debian|https://snapshot.debian.org/archive/debian/20261105T000000Z|g' \
       /etc/apt/sources.list.d/debian.sources \
+    && echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80-retries \
     && apt-get update \
     && apt-get upgrade --yes --no-install-recommends \
     && apt-get install --yes --no-install-recommends ca-certificates git \
@@ -44,6 +45,7 @@ RUN sed -i \
       -e 's|http://deb.debian.org/debian-security|https://snapshot.debian.org/archive/debian-security/20261105T000000Z|g' \
       -e 's|http://deb.debian.org/debian|https://snapshot.debian.org/archive/debian/20261105T000000Z|g' \
       /etc/apt/sources.list.d/debian.sources \
+    && echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80-retries \
     && apt-get update \
     && apt-get upgrade --yes --no-install-recommends \
     && apt-get install --yes --no-install-recommends libpq5 \
