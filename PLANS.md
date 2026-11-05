@@ -171,6 +171,11 @@ credentials must never be committed.
   existing code moves.
 - Evidence: on saved real responses, clean search results are 62% to 69% of raw and filings 73%;
   clean articles are about 2% larger.
+- Deployed evidence (2026-11-05): image `m8` from `c01d0e0`, with apt 2.6.2 from the 2026-11-05
+  Debian snapshot, passed `worker_interface_ok` and `preflight_ok` on the live lake. In staging,
+  `m6_check` passed all 25 checks. Live AAPL and "tariff" searches were 69% of raw, and filings 73%,
+  with the same warnings and `content_trust`. In 15 articles the text was identical in both views,
+  and 21 lines were flagged. `m7` is kept for rollback.
 - Not covered, and still pipeline work in `stram_data`: spam that passes `content_farm`, missing filing
   text and Finnhub redirect URLs.
 
