@@ -152,6 +152,28 @@ reading it, and filtering cannot reliably catch that. So:
 **This repository is public.** Test fixtures must be synthetic. Real article text, hosts, addresses and
 credentials must never be committed.
 
+### Clean view (2026-11-04)
+
+- Decision: add an optional `view` (`raw` default, `clean`) to `qual_search_news`, `qual_get_filings`
+  and `qual_get_article`, as the Quant MCP did in its PR #1. Raw stays byte-identical; only these three
+  tools' schema hashes change.
+- The clean view is lossless (ENGINEERING.md sections 4 and 6), because the Quant review rejected a
+  lossy first version. Cards become one table holding every field, and the golden tests rebuild every
+  raw card from it. Ticker links under `min_confidence` stay on their cards and are counted, not
+  dropped. Article text is never rewritten: lines that look like page furniture are flagged by
+  position and category, and stay in the text.
+- Flagging is a layout hint, not news logic, so it sits in the Tool Plane. It looks only at the
+  returned slice and matches whole lines against fixed shapes taken from a sample of 30 fetched
+  Finnhub articles, where furniture was 1.2% of characters. Removing it would save little, so
+  nothing is removed. Cleaning stored text belongs in `stram_data` ingestion if it is ever wanted.
+- Import layers (ENGINEERING.md 3.2): `clean_views` sits under `tool_adapter`, its only caller, and
+  above `tool_registry`. The clean output models live in `tool_models` beside the raw ones, so no
+  existing code moves.
+- Evidence: on saved real responses, clean search results are 62% to 69% of raw and filings 73%;
+  clean articles are about 2% larger.
+- Not covered, and still pipeline work in `stram_data`: spam that passes `content_farm`, missing filing
+  text and Finnhub redirect URLs.
+
 ## 5. Being honest about the data
 
 These facts come from the live data on 2026-11-01. Tool output must not suggest otherwise.

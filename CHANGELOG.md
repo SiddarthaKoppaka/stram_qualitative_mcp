@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add an optional `view` (`raw` default, `clean`) to `qual_search_news`, `qual_get_filings` and
+  `qual_get_article`. The clean view is lossless: cards as one table holding every field, a count of
+  kept ticker links under `min_confidence`, article furniture lines flagged by position without
+  rewriting the text, and a plain `explanation` for empty results. Raw output is unchanged; these
+  three tools' schema hashes change.
+
 - M7: serve the tools with FastMCP 4.1.6, ported from the Quant MCP. **Client-visible changes:**
   denials are `access_denied` with the message "Access denied."; every error carries
   `_meta["io.stram/error"]` with `code` and `retryable`; `tools/list` shows only the tools a token's

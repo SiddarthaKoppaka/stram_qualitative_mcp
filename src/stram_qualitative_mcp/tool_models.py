@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, StringConstraints, model_validator
 from stram_data.data_interface import NewsProviderCoverage, NewsRow, NewsTicker
 
 MAX_SPAN_DAYS = 1830
@@ -35,6 +35,10 @@ COVERAGE_LIMITATIONS = (
 )
 
 Provider = Literal["finnhub", "gdelt", "sec"]
+# `raw` is the Data Interface result as it stands; `clean` is the same values in a compact shape.
+ViewMode = Literal["raw", "clean"]
+# One table row; its values are named by the table's `columns`.
+Row = tuple[JsonValue, ...]
 Ticker = Annotated[
     str,
     StringConstraints(min_length=1, max_length=20, pattern=r"^[A-Z0-9.\-]+$"),
@@ -76,6 +80,7 @@ class NewsSearchInput(ContractModel):
     collapse_stories: bool = True
     as_of: date | None = None
     limit: int = Field(default=DEFAULT_RESULT_ROWS, ge=1, le=MAX_RESULT_ROWS)
+    view: ViewMode = "raw"
 
     @model_validator(mode="after")
     def validate_search(self) -> NewsSearchInput:
@@ -139,6 +144,7 @@ class FilingsInput(ContractModel):
     tickers: tuple[Ticker, ...] = Field(min_length=1, max_length=10)
     forms: tuple[Form, ...] = Field(default=(), max_length=10)
     limit: int = Field(default=DEFAULT_RESULT_ROWS, ge=1, le=MAX_RESULT_ROWS)
+    view: ViewMode = "raw"
 
     @model_validator(mode="after")
     def validate_range(self) -> FilingsInput:
@@ -196,6 +202,7 @@ class ArticleInput(ContractModel):
     article_id: ArticleId
     offset: int = Field(default=0, ge=0, le=MAX_TEXT_OFFSET)
     max_chars: int = Field(default=DEFAULT_TEXT_CHARS, ge=1, le=MAX_TEXT_CHARS)
+    view: ViewMode = "raw"
 
 
 class ArticleData(ContractModel):
@@ -216,6 +223,55 @@ class NewsSearchData(ContractModel):
     truncated: bool
     as_of: date | None
     availability_note: str
+
+
+class CleanNewsSearchData(ContractModel):
+    """Search cards as one table; every card field is kept, tickers as `ticker_columns` rows."""
+
+    view: Literal["clean"]
+    columns: tuple[str, ...]
+    ticker_columns: tuple[str, ...]
+    rows: tuple[Row, ...]
+    count: int
+    limit: int
+    truncated: bool
+    as_of: date | None
+    availability_note: str
+    min_confidence: float
+    links_below_min_confidence: int  # kept on their cards; the article matched on another link
+    explanation: str | None
+
+
+class CleanFilingsData(ContractModel):
+    """Filing cards as one table; every card field is kept, tickers as `ticker_columns` rows."""
+
+    view: Literal["clean"]
+    columns: tuple[str, ...]
+    ticker_columns: tuple[str, ...]
+    rows: tuple[Row, ...]
+    count: int
+    limit: int
+    truncated: bool
+    explanation: str | None
+
+
+class CleanArticleData(ContractModel):
+    """The raw article unchanged, plus the lines of this slice that look like page furniture.
+
+    `flagged_lines` rows are named by `line_columns`; `offset` counts from the start of the text.
+    Flagged lines stay in `untrusted_text`, which is never rewritten.
+    """
+
+    view: Literal["clean"]
+    article: NewsCard
+    text_available: bool
+    untrusted_text: str | None
+    offset: int
+    total_chars: int
+    has_more: bool
+    line_columns: tuple[str, ...]
+    flagged_lines: tuple[Row, ...]
+    explanation: str | None
 
 
 class TimelineInput(ContractModel):
@@ -277,6 +333,6 @@ class ToolEnvelope[DataT: BaseModel](ContractModel):
 
 CoverageEnvelope = ToolEnvelope[CoverageData]
 TimelineEnvelope = ToolEnvelope[TimelineData]
-NewsSearchEnvelope = ToolEnvelope[NewsSearchData]
-FilingsEnvelope = ToolEnvelope[FilingsData]
-ArticleEnvelope = ToolEnvelope[ArticleData]
+NewsSearchEnvelope = ToolEnvelope[NewsSearchData | CleanNewsSearchData]
+FilingsEnvelope = ToolEnvelope[FilingsData | CleanFilingsData]
+ArticleEnvelope = ToolEnvelope[ArticleData | CleanArticleData]

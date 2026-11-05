@@ -19,6 +19,7 @@ from stram_data.data_interface import (
     NotFoundError,
 )
 
+from stram_qualitative_mcp.clean_views import clean_article, clean_filings, clean_news_search
 from stram_qualitative_mcp.errors import ToolInputError, ToolNotFoundError, ToolUnavailableError
 from stram_qualitative_mcp.tool_models import (
     COVERAGE_LIMITATIONS,
@@ -64,7 +65,12 @@ class QualToolAdapter:
             raise ToolInputError from None
         try:
             request = spec.input_model.model_validate(arguments)
+            # The view selects the response shape only; the Data Interface never sees it.
             data = self._dispatch(tool_name, request)
+            # Warnings come from the raw result, so both views carry the same ones.
+            warnings = _warnings(data)
+            if getattr(request, "view", "raw") == "clean":
+                data = _clean(data, request)
             envelope = spec.output_model.model_validate(
                 {
                     "tool_version": __version__,
@@ -73,7 +79,7 @@ class QualToolAdapter:
                     "policy_version": self._policy_version,
                     "request_id": request_id,
                     "data": data,
-                    "warnings": _warnings(data),
+                    "warnings": warnings,
                 }
             )
         except (ValidationError, InvalidQueryError) as error:
@@ -129,7 +135,7 @@ class QualToolAdapter:
         )
 
     def _search_news(self, request: NewsSearchInput) -> NewsSearchData:
-        result = self._data.get_news(NewsQuery.model_validate(request.model_dump()))
+        result = self._data.get_news(NewsQuery.model_validate(request.model_dump(exclude={"view"})))
         return NewsSearchData(
             rows=tuple(NewsCard.from_row(row) for row in result.rows),
             count=result.count,
@@ -182,6 +188,17 @@ class QualToolAdapter:
             total_chars=len(text),
             has_more=request.offset + request.max_chars < len(text),
         )
+
+
+def _clean(data: BaseModel, request: BaseModel) -> BaseModel:
+    """Reshape a raw result into its clean view; values are copied, never rewritten."""
+    if isinstance(data, NewsSearchData) and isinstance(request, NewsSearchInput):
+        return clean_news_search(data, request.min_confidence)
+    if isinstance(data, FilingsData):
+        return clean_filings(data)
+    if isinstance(data, ArticleData):
+        return clean_article(data)
+    raise ToolInputError
 
 
 def _strip_invisible(text: str) -> str:
