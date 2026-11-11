@@ -23,6 +23,8 @@ an invalid one stops startup. The model is `AppSettings` in
 |---|---|---|
 | `STRAM_QUAL_MCP_ALLOWED_ORIGINS` | None | Comma-separated browser origins; requests from any other `Origin` get 403 |
 | `STRAM_QUAL_MCP_ALLOWED_ALGORITHMS` | `RS256` | The one signing algorithm accepted |
+| `STRAM_QUAL_MCP_JWT_CLOCK_SKEW_SECONDS` | `30` | Allowed clock skew when evaluating `iat`, `exp`, and optional `nbf`; 0 to 300 seconds |
+| `STRAM_QUAL_MCP_JWT_MAX_LIFETIME_SECONDS` | `900` | Maximum permitted `exp - iat` access-token lifetime; greater than 0 and at most 3600 seconds |
 | `STRAM_QUAL_MCP_ALLOW_INSECURE_HTTP` | Off | `1` allows plain HTTP, only for loopback URLs, as in demo mode |
 | `STRAM_QUAL_MCP_IMAGE_DIGEST` | `development` | Recorded in every audit record |
 | `STRAM_QUAL_MCP_OTLP_ENDPOINT` | None | Where to send traces and metrics; HTTPS unless loopback in demo mode |
@@ -33,6 +35,14 @@ an invalid one stops startup. The model is `AppSettings` in
 | `STRAM_QUAL_MCP_DENIAL_WINDOW_SECONDS` | 60 | The window those denials are counted in |
 | `STRAM_QUAL_MCP_BIND_HOST` | `127.0.0.1` | `127.0.0.1`, or `0.0.0.0` inside a container |
 | `STRAM_QUAL_MCP_BIND_PORT` | 8000 | The listening port |
+
+## Token requirements
+
+Access tokens must carry `iss`, `aud`, `sub`, `client_id` or `azp`, the tenant claim (`tenant_id`),
+`scope` or `scp`, numeric `iat`, and numeric `exp`. They are rejected when expired, issued too far in
+the future, have a non-positive or over-limit lifetime, or carry an `nbf` that is too far in the
+future. `nbf` is optional, but when present must be numeric and valid under the configured clock
+skew.
 
 ## Fixed in code
 
