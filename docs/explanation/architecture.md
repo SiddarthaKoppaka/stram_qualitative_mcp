@@ -110,7 +110,10 @@ flowchart TB
   queue are bounded.
 - **Audit** is a separate SQLite WAL journal using synchronous `FULL`, canonical JSON, monotonic
   sequence numbers and an HMAC link to the previous record. Every call, including refusals, ends in
-  exactly one record. The key is mounted separately. The journal is tamper-evident, not protection
+  exactly one record, with one exception: HTTP denials before dispatch (bad token, Host or Origin),
+  which a caller without credentials can cause at will. The first 20 in each 60 seconds are recorded
+  one by one; the rest are counted and written as one `transport_denials_sampled` record, whose
+  `row_count` is the number skipped, when the next window's first denial arrives. The key is mounted separately. The journal is tamper-evident, not protection
   against a host-root attacker; external checkpoints close that gap operationally.
 - **Runtime:** UID/GID 10001, a read-only root, dropped capabilities, no-new-privileges, bounded tmpfs
   and read-only binds of `parquet` and `bodies`. Container `serve` runs preflight before opening the

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from uuid import uuid4
 
 from opentelemetry import propagate
@@ -19,15 +20,64 @@ MAX_TOOL_NAME_LENGTH = 100
 HTTP_UNAUTHORIZED = 401
 HTTP_ERROR_FLOOR = 400
 DENIAL_STATUSES = frozenset({HTTP_UNAUTHORIZED, 403, 421})
+# Unauthenticated callers can cause these denials at will, and each audit record is a synchronous,
+# hash-chained write. Past this many in a window, denials are counted instead of written one by one.
+DENIALS_AUDITED_PER_WINDOW = 20
+DENIAL_WINDOW_SECONDS = 60.0
+SAMPLED_OUTCOME = "transport_denials_sampled"
+
+
+class DenialSampler:
+    """Admit the first ``per_window`` denials of each window for individual audit; count the rest.
+
+    The count is handed back once, when the first denial of a later window arrives, so it can be
+    written as one summary record. Memory and audit writes per window are constant.
+    """
+
+    def __init__(
+        self,
+        per_window: int = DENIALS_AUDITED_PER_WINDOW,
+        window_seconds: float = DENIAL_WINDOW_SECONDS,
+        *,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
+        """Create a sampler; ``clock`` is replaceable in tests."""
+        self._per_window = per_window
+        self._window = window_seconds
+        self._clock = clock
+        self._window_start = float("-inf")
+        self._seen = 0
+        self._suppressed = 0
+
+    @property
+    def window_seconds(self) -> float:
+        """Length of one sampling window."""
+        return self._window
+
+    def admit(self) -> tuple[bool, int]:
+        """Return (audit this denial individually, suppressed count to summarize first)."""
+        now = self._clock()
+        carried = 0
+        if now - self._window_start >= self._window:
+            carried, self._suppressed = self._suppressed, 0
+            self._window_start, self._seen = now, 0
+        self._seen += 1
+        if self._seen <= self._per_window:
+            return True, carried
+        self._suppressed += 1
+        return False, carried
 
 
 class TransportDenialAuditMiddleware:
     """Audit HTTP auth/Host/Origin denials that occur before MCP dispatch."""
 
-    def __init__(self, app: ASGIApp, runtime: Runtime) -> None:
+    def __init__(
+        self, app: ASGIApp, runtime: Runtime, sampler: DenialSampler | None = None
+    ) -> None:
         """Wrap ``app``, recording to ``runtime``."""
         self._app = app
         self._runtime = runtime
+        self._sampler = sampler or DenialSampler()
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Handle one ASGI event."""
@@ -55,6 +105,25 @@ class TransportDenialAuditMiddleware:
         await self._app(scope, receive, audited_send)
 
     def _audit_denial(self, scope: Scope, status: int, started: float) -> None:
+        audit_this, suppressed = self._sampler.admit()
+        if suppressed:
+            self._runtime.audit.append(
+                AuditEvent(
+                    request_id=str(uuid4()),
+                    tool="mcp_request",
+                    authorization_outcome="denied",
+                    policy_version=self._runtime.worker.policy_version,
+                    row_count=suppressed,
+                    data_scope={"window_seconds": self._sampler.window_seconds},
+                    duration_ms=0.0,
+                    outcome=SAMPLED_OUTCOME,
+                    image_digest=self._runtime.settings.image_digest,
+                )
+            )
+        if audit_this:
+            self._append_denial(scope, status, started)
+
+    def _append_denial(self, scope: Scope, status: int, started: float) -> None:
         headers = {
             key.decode("latin-1").lower(): value.decode("latin-1")
             for key, value in scope.get("headers", [])

@@ -37,3 +37,14 @@ def test_the_audit_journal_never_contains_the_token_or_paths(parity: ParityClien
     assert token not in journal
     assert "/home" not in journal
     assert "fixtures/news/parquet" not in journal
+
+
+def test_a_flood_of_transport_denials_writes_a_bounded_number_of_records(
+    parity: ParityClient,
+) -> None:
+    from stram_qualitative_mcp.http_boundary import DENIALS_AUDITED_PER_WINDOW
+
+    for _ in range(DENIALS_AUDITED_PER_WINDOW + 15):
+        parity.rpc("tools/list")
+
+    assert len(parity.audit_outcomes()) == DENIALS_AUDITED_PER_WINDOW

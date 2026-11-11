@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Bound the audit writes an unauthenticated caller can cause. HTTP denials before dispatch (bad token,
+  Host or Origin) are recorded one by one for the first 20 in each 60 seconds; the rest are counted and
+  written as one `transport_denials_sampled` record with the count in `row_count`. Each record is a
+  synchronous hash-chained write, so a flood of bad tokens could stall the server and grow the journal.
+
 - Add an optional `view` (`raw` default, `clean`) to `qual_search_news`, `qual_get_filings` and
   `qual_get_article`. The clean view is lossless: cards as one table holding every field, a count of
   kept ticker links under `min_confidence`, article furniture lines flagged by position without
