@@ -1,7 +1,7 @@
 # About the architecture
 
 This service is a thin, independently deployable MCP Tool Plane. It turns authenticated MCP requests
-into calls to the public `stram_data.data_interface` 1.7.0 API. News logic stays in the Data Plane;
+into calls to the public `stram_data.data_interface` 1.9.0 API. News logic stays in the Data Plane;
 this repository adds no SQL, joins, ranking, scoring or write paths. It runs on
 [FastMCP](https://gofastmcp.com/), like the Quant MCP; see
 [About the FastMCP migration](about-the-fastmcp-migration.md) for why.
@@ -23,7 +23,7 @@ flowchart LR
         O[logs, traces, metrics]
     end
     subgraph data[News Data Plane]
-        I[public Data Interface 1.7.0]
+        I[public Data Interface 1.9.0]
         Q[DuckDB]
         L[(read-only Parquet and text)]
     end

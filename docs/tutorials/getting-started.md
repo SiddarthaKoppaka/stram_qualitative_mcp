@@ -32,7 +32,7 @@ uv sync --frozen --dev
 uv run python -c 'import stram_data; print(stram_data.__version__)'
 ```
 
-Expected: `1.7.0`.
+Expected: `1.9.0`.
 
 ## 2. Start the service
 

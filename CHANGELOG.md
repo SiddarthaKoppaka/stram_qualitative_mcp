@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add `qual_get_news_feed` (`qual:read`): news about 1 to 50 tickers that arrived after a cursor,
+  oldest first, for callers that poll. Pin `stram_data` 1.9.0 at `9929740`, which adds the Data
+  Interface's `get_news_feed`; the image still needs only `libpq5`, which it already installs.
+  Existing tool contracts and schema hashes are unchanged.
+
 - Bound the audit writes an unauthenticated caller can cause. HTTP denials before dispatch (bad token,
   Host or Origin) are recorded one by one for the first 20 in each 60 seconds; the rest are counted and
   written as one `transport_denials_sampled` record with the count in `row_count`. Each record is a

@@ -10,6 +10,7 @@ are in `contracts/tool_schemas.json`, and MCP `tools/list` returns the same sche
 | [`qual_get_filings`](#qual_get_filings) | `qual:read` | 10 s |
 | [`qual_get_article`](#qual_get_article) | `qual:text` | 10 s |
 | [`qual_get_news_timeline`](#qual_get_news_timeline) | `qual:analytics` | 15 s |
+| [`qual_get_news_feed`](#qual_get_news_feed) | `qual:read` | 10 s |
 
 ## Common contract
 
@@ -22,7 +23,7 @@ Successful calls return structured content with this envelope:
 ```json
 {
   "tool_version": "0.1.0",
-  "stram_data_version": "1.7.0",
+  "stram_data_version": "1.9.0",
   "interface_version": "1",
   "policy_version": "availability-policy-hash",
   "request_id": "server-generated-id",
@@ -178,6 +179,29 @@ reduces hidden text and does not make it safe. An unknown `article_id` returns `
 Days without articles are absent rather than zero. An article linked to two tickers counts once for
 each. `gdelt_article_tone` is GDELT's score for whole articles, not sentiment about the ticker, and
 it is null when no GDELT article backs it. `tone_articles` is how many articles sit behind the mean.
+
+## `qual_get_news_feed`
+
+For polling. It returns news about the tickers that arrived after a cursor, oldest first.
+
+| Input | Required | Default | Limit |
+|---|---|---|---|
+| `tickers` | Yes | | 1 to 50 |
+| `after` | No | Start `max_age_hours` back | A `next_cursor` from an earlier call |
+| `max_age_hours` | No | 48 | 1 to 168 |
+| `min_confidence` | No | 0.6 | 0 to 1 |
+| `include_flagged` | No | False | As in search |
+| `limit` | No | 100 | 1 to 100 |
+
+`data` holds `rows`, `count`, `limit`, `truncated`, `next_cursor`, `settled_until` and
+`availability_note`. Each row is a search card plus `event_id` and `ingested_at`.
+
+Pass `next_cursor` back as `after` on the next call. When `truncated` is true, more rows are waiting,
+so call again at once. Each row is one new version of an article, so the same `article_id` can come
+again, and `tickers` are the links that version carries; merge them by `article_id`. Only items
+published within `max_age_hours` are returned, so an old article found again today is not news.
+Items appear about 90 seconds after ingestion (`settled_until`); one delayed longer by an ingestion
+outage is skipped here and still found by `qual_search_news`.
 
 ## Errors
 

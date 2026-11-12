@@ -16,7 +16,7 @@ dependencies = [
   "opentelemetry-sdk>=1.45,<2",
   "pydantic>=2.10,<3",
   "PyJWT[crypto]>=2.10,<3",
-  "stram-data @ git+https://github.com/SiddarthaKoppaka/stram_data@e21f320400ab7191a931c28297513a8af34dd6e9",
+  "stram-data @ git+https://github.com/SiddarthaKoppaka/stram_data@9929740e11ae79da3e702f0591b0da90537293a3",
 ]
 
 [project.scripts]

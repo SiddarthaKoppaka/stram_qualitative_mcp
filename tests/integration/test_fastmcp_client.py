@@ -75,7 +75,7 @@ async def test_official_client_lists_and_calls_tools_on_the_fastmcp_server(tmp_p
             result = await session.call_tool("qual_describe_coverage", {})
 
         assert initialized.server_info.name == "stram-qualitative"
-        assert len(listed.tools) == len(set(tool.name for tool in listed.tools)) == 5
+        assert len(listed.tools) == len(set(tool.name for tool in listed.tools)) == 6
         assert all(tool.annotations and tool.annotations.read_only_hint for tool in listed.tools)
         assert result.is_error is False
         assert (result.structured_content or {})["data"]["providers"]

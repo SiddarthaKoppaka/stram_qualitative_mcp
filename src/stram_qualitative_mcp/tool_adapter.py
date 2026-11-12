@@ -14,6 +14,7 @@ from stram_data.data_interface import (
     DataInterface,
     DataUnavailableError,
     InvalidQueryError,
+    NewsFeedQuery,
     NewsQuery,
     NewsTimelineQuery,
     NotFoundError,
@@ -29,10 +30,13 @@ from stram_qualitative_mcp.tool_models import (
     ArticleData,
     ArticleInput,
     CoverageData,
+    FeedCard,
     FilingCard,
     FilingsData,
     FilingsInput,
     NewsCard,
+    NewsFeedData,
+    NewsFeedInput,
     NewsSearchData,
     NewsSearchInput,
     TimelineData,
@@ -101,7 +105,21 @@ class QualToolAdapter:
             return self._article(request)
         if isinstance(request, TimelineInput):
             return self._timeline(request)
+        if isinstance(request, NewsFeedInput):
+            return self._feed(request)
         raise ToolInputError
+
+    def _feed(self, request: NewsFeedInput) -> NewsFeedData:
+        result = self._data.get_news_feed(NewsFeedQuery.model_validate(request.model_dump()))
+        return NewsFeedData(
+            rows=tuple(FeedCard.from_row(row) for row in result.rows),
+            count=result.count,
+            limit=result.limit,
+            truncated=result.truncated,
+            next_cursor=result.next_cursor,
+            settled_until=result.settled_until,
+            availability_note=result.availability_note,
+        )
 
     def _coverage(self) -> CoverageData:
         coverage = self._data.get_news_coverage()
@@ -214,7 +232,9 @@ def _strip_invisible(text: str) -> str:
 def _warnings(data: BaseModel) -> tuple[str, ...]:
     warnings: list[str] = []
     truncated = getattr(data, "truncated", False)
-    if truncated:
+    if truncated and isinstance(data, NewsFeedData):
+        warnings.append("More news is waiting; call again at once with next_cursor.")
+    elif truncated:
         warnings.append("Result is truncated; narrow the date range or filters.")
     as_of = getattr(data, "as_of", None)
     if as_of is not None and as_of < HISTORY_INGESTED_FROM:
