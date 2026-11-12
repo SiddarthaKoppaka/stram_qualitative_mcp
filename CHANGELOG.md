@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Move the image's Debian snapshot to 2026-11-12: the 2026-11-05 security index had expired, so the
+  image no longer built.
+
 - Add `qual_get_news_feed` (`qual:read`): news about 1 to 50 tickers that arrived after a cursor,
   oldest first, for callers that poll. Pin `stram_data` 1.9.0 at `9929740`, which adds the Data
   Interface's `get_news_feed`; the image still needs only `libpq5`, which it already installs.
