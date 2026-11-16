@@ -8,6 +8,9 @@
   request. Pin `stram_data` 1.12.0 at `2eaf9ae`, which adds `get_insider_transactions`; the lake must
   hold the `insider_transaction` dataset, or the tool answers `unavailable`. Existing tool contracts
   and schema hashes are unchanged (the schema file only gains lines).
+- Move the image's Debian snapshot to 2026-11-15: `libpq5` 15.19 in the 2026-11-12 snapshot has newly
+  published high-severity CVEs that the image scan rejects (main has failed that gate since then);
+  the new snapshot carries 15.20.
 - Upgrade `soupsieve` to 4.1.1 in the lock (transitive, via `stram-data`): 3.0.4 has a newly published
   vulnerability, CVE-2026-126190, that the dependency gate rejects.
 
