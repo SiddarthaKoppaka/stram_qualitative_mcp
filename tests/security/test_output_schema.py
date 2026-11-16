@@ -48,6 +48,12 @@ def test_every_real_result_round_trips_through_its_output_contract(
         },
         "qual_get_article": {"article_id": str(uuid.uuid5(uuid.NAMESPACE_URL, "held-text"))},
         "qual_get_news_feed": {"tickers": ["AAPL"], "max_age_hours": 168},
+        "qual_get_insider_transactions": {
+            "tickers": ["AAPL", "ZZZZ"],
+            "start_date": "2026-10-01",
+            "end_date": "2026-10-31",
+            "include_footnotes": True,
+        },
     }
 
     for spec in TOOL_SPECS:

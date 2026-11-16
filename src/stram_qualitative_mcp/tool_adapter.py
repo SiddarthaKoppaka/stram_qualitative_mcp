@@ -5,7 +5,9 @@ from __future__ import annotations
 import hashlib
 import json
 import unicodedata
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import stram_data
 from pydantic import BaseModel, ValidationError
@@ -13,6 +15,7 @@ from stram_data.data_interface import (
     INTERFACE_VERSION,
     DataInterface,
     DataUnavailableError,
+    InsiderTransactionsQuery,
     InvalidQueryError,
     NewsFeedQuery,
     NewsQuery,
@@ -34,6 +37,9 @@ from stram_qualitative_mcp.tool_models import (
     FilingCard,
     FilingsData,
     FilingsInput,
+    InsiderCard,
+    InsiderTransactionsData,
+    InsiderTransactionsInput,
     NewsCard,
     NewsFeedData,
     NewsFeedInput,
@@ -97,16 +103,17 @@ class QualToolAdapter:
     def _dispatch(self, tool_name: str, request: BaseModel) -> BaseModel:
         if tool_name == "qual_describe_coverage":
             return self._coverage()
-        if isinstance(request, NewsSearchInput):
-            return self._search_news(request)
-        if isinstance(request, FilingsInput):
-            return self._filings(request)
-        if isinstance(request, ArticleInput):
-            return self._article(request)
-        if isinstance(request, TimelineInput):
-            return self._timeline(request)
-        if isinstance(request, NewsFeedInput):
-            return self._feed(request)
+        handlers: tuple[tuple[type[BaseModel], Callable[[Any], BaseModel]], ...] = (
+            (NewsSearchInput, self._search_news),
+            (FilingsInput, self._filings),
+            (ArticleInput, self._article),
+            (TimelineInput, self._timeline),
+            (NewsFeedInput, self._feed),
+            (InsiderTransactionsInput, self._insiders),
+        )
+        for kind, handler in handlers:
+            if isinstance(request, kind):
+                return handler(request)
         raise ToolInputError
 
     def _feed(self, request: NewsFeedInput) -> NewsFeedData:
@@ -118,6 +125,24 @@ class QualToolAdapter:
             truncated=result.truncated,
             next_cursor=result.next_cursor,
             settled_until=result.settled_until,
+            availability_note=result.availability_note,
+        )
+
+    def _insiders(self, request: InsiderTransactionsInput) -> InsiderTransactionsData:
+        result = self._data.get_insider_transactions(
+            InsiderTransactionsQuery.model_validate(
+                request.model_dump(exclude={"include_footnotes"})
+            )
+        )
+        return InsiderTransactionsData(
+            rows=tuple(
+                InsiderCard.from_row(row, include_footnotes=request.include_footnotes)
+                for row in result.rows
+            ),
+            count=result.count,
+            limit=result.limit,
+            truncated=result.truncated,
+            summary=result.summary,
             availability_note=result.availability_note,
         )
 
@@ -234,6 +259,11 @@ def _warnings(data: BaseModel) -> tuple[str, ...]:
     truncated = getattr(data, "truncated", False)
     if truncated and isinstance(data, NewsFeedData):
         warnings.append("More news is waiting; call again at once with next_cursor.")
+    elif truncated and isinstance(data, InsiderTransactionsData):
+        warnings.append(
+            "More transactions exist than were returned; the summary already covers the whole "
+            "range. Narrow the dates, categories or companies to see the rest."
+        )
     elif truncated:
         warnings.append("Result is truncated; narrow the date range or filters.")
     as_of = getattr(data, "as_of", None)
