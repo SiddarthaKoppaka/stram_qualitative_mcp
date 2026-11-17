@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-expected_commit=2eaf9aef309e3be3ed6d575cbc84d7813b1ea6be
+expected_commit=71a797d131bfad2e01aa8b390e8b0d5ba7e5d3e8
 source_path=${1:-../stram_data}
 archive_path=$(mktemp -d)
 trap 'rm -rf "$archive_path"' EXIT

@@ -48,6 +48,7 @@ def _item(
     body: str | None = None,
     event_type: str = "news.article",
     metadata: dict[str, object] | None = None,
+    url: str | None = None,
 ) -> NewsItem:
     body_path = None
     if body is not None:
@@ -67,7 +68,7 @@ def _item(
         source_id=key,
         title=title,
         summary=summary,
-        url=f"https://example.test/{key}",
+        url=url or f"https://example.test/{key}",
         dedupe_key=key,
         content_hash="0" * 64,
         published_at=published,
@@ -92,6 +93,9 @@ def items() -> list[NewsItem]:
             summary="A made-up summary about tariffs.",
             body_status="fetched",
             body=LONG_TEXT,
+            # A Finnhub link only forwards; the page the body fetcher reached is stored beside it.
+            url="https://finnhub.io/api/news?id=held-text",
+            metadata={"resolved_url": "https://publisher.test/apple-supplier"},
         ),
         _item(
             "weak-link",
