@@ -442,6 +442,17 @@
                 "title": "Quality Flags",
                 "type": "array"
               },
+              "source_url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Source Url"
+              },
               "story_id": {
                 "anyOf": [
                   {
@@ -499,6 +510,7 @@
               "title",
               "summary",
               "url",
+              "source_url",
               "tickers",
               "text_available",
               "version_count",
@@ -641,7 +653,7 @@
         "title": "ToolEnvelope[Union[NewsSearchData, CleanNewsSearchData]]",
         "type": "object"
       },
-      "schemaHash": "26d6341abda529ed95f80d03c00620462aba9b5ff3fc2caa9a4c308e37be105b",
+      "schemaHash": "677290beb4ed97d861656423c57480503207205ff515a4dad1946e799a57c19a",
       "scope": "qual:read"
     },
     {
@@ -1254,6 +1266,17 @@
                 "title": "Quality Flags",
                 "type": "array"
               },
+              "source_url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Source Url"
+              },
               "story_id": {
                 "anyOf": [
                   {
@@ -1311,6 +1334,7 @@
               "title",
               "summary",
               "url",
+              "source_url",
               "tickers",
               "text_available",
               "version_count",
@@ -1403,7 +1427,7 @@
         "title": "ToolEnvelope[Union[ArticleData, CleanArticleData]]",
         "type": "object"
       },
-      "schemaHash": "d30b3d96da508735c6ba37c230f90485aeeebdb507ef03dbf1a23785c500bb28",
+      "schemaHash": "d5bb0147584d1a957b2c78604d7f0fb5a181d7a60a4e87fb7cd7f7bb099664e4",
       "scope": "qual:text"
     },
     {
@@ -1727,6 +1751,17 @@
                 "title": "Quality Flags",
                 "type": "array"
               },
+              "source_url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Source Url"
+              },
               "story_id": {
                 "anyOf": [
                   {
@@ -1784,6 +1819,7 @@
               "title",
               "summary",
               "url",
+              "source_url",
               "tickers",
               "text_available",
               "version_count",
@@ -1919,7 +1955,7 @@
         "title": "ToolEnvelope[NewsFeedData]",
         "type": "object"
       },
-      "schemaHash": "10d59168bb37d0e083a9af4331080f9992fa9b04fca711595b79b1d7dff024ac",
+      "schemaHash": "7d6741a2dff02150119dc9c07adb47ee48b9edb2eb0c890c0b3d8946a9c17081",
       "scope": "qual:read"
     },
     {

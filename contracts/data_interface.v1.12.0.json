@@ -1,6 +1,6 @@
 {
   "interface_version": "1",
-  "package_commit": "2eaf9aef309e3be3ed6d575cbc84d7813b1ea6be",
+  "package_commit": "71a797d131bfad2e01aa8b390e8b0d5ba7e5d3e8",
   "package_version": "1.12.0",
   "public_methods": [
     "describe_availability_policies",

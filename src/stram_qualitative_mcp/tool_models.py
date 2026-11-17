@@ -125,7 +125,9 @@ class NewsCard(ContractModel):
     first_ingested_at: datetime
     title: str
     summary: str | None
-    url: str
+    url: str  # the provider's link, which may only forward to the article
+    # The publisher's own page, when known: what a person can open and a reader can cite.
+    source_url: str | None
     tickers: tuple[NewsTicker, ...]
     text_available: bool
     version_count: int
@@ -144,6 +146,7 @@ class NewsCard(ContractModel):
             title=row.title,
             summary=row.summary,
             url=row.url,
+            source_url=row.source_url,
             tickers=row.tickers,
             text_available=text_available(row),
             version_count=row.version_count,

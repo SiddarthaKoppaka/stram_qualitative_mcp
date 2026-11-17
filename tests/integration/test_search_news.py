@@ -125,3 +125,32 @@ def test_wide_search_without_tickers_is_rejected_not_clamped(
             {"start_date": "2026-01-01", "end_date": "2026-10-31", "text": "tariffs"},
             "wide",
         )
+
+
+def test_a_forwarding_link_comes_with_the_publishers_own_page(
+    tool_adapter: QualToolAdapter,
+) -> None:
+    rows = {row.title: row for row in _search(tool_adapter, tickers=["AAPL"]).rows}
+
+    forwarded = rows["Synthetic Apple supplier update"]
+    assert forwarded.url == "https://finnhub.io/api/news?id=held-text"
+    assert forwarded.source_url == "https://publisher.test/apple-supplier"
+
+
+def test_a_page_that_is_its_own_source_is_returned_as_the_source(
+    tool_adapter: QualToolAdapter,
+) -> None:
+    rows = _search(tool_adapter, tickers=["AAPL"], min_confidence=0.0).rows
+    plain = next(row for row in rows if row.title == "Synthetic fruit market report")
+
+    assert plain.source_url == plain.url
+
+
+def test_the_clean_view_keeps_the_source_page(tool_adapter: QualToolAdapter) -> None:
+    envelope = tool_adapter.execute(
+        "qual_search_news", {**OCTOBER, "tickers": ["AAPL"], "view": "clean"}, "search"
+    )
+    data = envelope.data  # type: ignore[attr-defined]
+    column = data.columns.index("source_url")
+
+    assert "https://publisher.test/apple-supplier" in [row[column] for row in data.rows]

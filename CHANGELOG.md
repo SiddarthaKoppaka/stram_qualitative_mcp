@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- News cards (`qual_search_news`, `qual_get_article`, `qual_get_news_feed`)
+  gain `source_url`: the publisher's own page when known, else null. About 99.7% of Finnhub news
+  carries only a `finnhub.io` forwarding link in `url`; the page the body fetcher reached is stored in
+  the row's metadata and is now returned. Pin `stram_data` 1.12.0 at `71a797d` (adds the field to the
+  Data Interface; same package version). The schema hashes of those three tools change, so
+  STRAM's pinned copy of `contracts/tool_schemas.json` must be updated together with this release.
 - Add `qual_get_insider_transactions` (`qual:read`): insider transactions from SEC Forms 3, 4 and 5 by
   filing date, with each row's SEC source link and a whole-range summary of open-market purchases and
   sales (exact value, split by the filing's Rule 10b5-1 plan box). Footnote text is returned only on

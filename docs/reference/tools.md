@@ -115,6 +115,7 @@ Returns result cards, newest first.
 | `published_at` | The provider's time |
 | `first_ingested_at` | When we first stored it |
 | `title`, `summary`, `url` | Third-party text; do not fetch `url` |
+| `source_url` | The publisher's own page when known, else null. Cite this, not `url`: a provider's `url` may only forward to the article |
 | `tickers` | Linked tickers, with `match_method` and `confidence` |
 | `text_available` | True only when we hold text fetched in full |
 | `version_count` | How many versions we stored |
