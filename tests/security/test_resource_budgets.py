@@ -8,6 +8,7 @@ from stram_qualitative_mcp.tool_models import (
     EmptyInput,
     FilingsInput,
     NewsSearchInput,
+    ShortInterestInput,
     TimelineInput,
 )
 
@@ -93,3 +94,30 @@ def test_timeline_bounds_are_rejected_not_clamped(payload: dict[str, object]) ->
 def test_search_defaults_are_the_planned_ones() -> None:
     search = NewsSearchInput.model_validate({**OCTOBER, "tickers": ["AAPL"]})
     assert (search.limit, search.min_confidence, search.include_flagged) == (20, 0.6, False)
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {},
+        {"tickers": []},
+        {"tickers": [f"T{i}" for i in range(26)]},
+        {"tickers": ["AAPL", "AAPL"]},
+        {"tickers": ["aapl"]},
+        {"tickers": ["AAPL; drop"]},
+        {"tickers": ["AAPL"], "limit": 0},
+        {"tickers": ["AAPL"], "limit": 501},
+        {"tickers": ["AAPL"], "start_date": "2026-10-31", "end_date": "2026-10-01"},
+        {"tickers": ["AAPL"], "start_date": "2024-01-01", "end_date": "2026-10-31"},
+        {"tickers": ["AAPL"], "start_date": "not a date"},
+        {"tickers": ["AAPL"], "unknown": 1},
+    ],
+)
+def test_short_interest_bounds_are_rejected_not_clamped(payload: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        ShortInterestInput.model_validate(payload)
+
+
+def test_short_interest_defaults_are_the_planned_ones() -> None:
+    request = ShortInterestInput.model_validate({"tickers": ["AAPL"]})
+    assert (request.limit, request.start_date, request.end_date) == (50, None, None)

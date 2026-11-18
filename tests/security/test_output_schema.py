@@ -54,6 +54,11 @@ def test_every_real_result_round_trips_through_its_output_contract(
             "include_text": True,
             "limit": 2,
         },
+        "qual_get_short_interest": {
+            "tickers": ["AAPL", "ZZZZ"],
+            "start_date": "2026-09-01",
+            "end_date": "2026-10-31",
+        },
         "qual_get_insider_transactions": {
             "tickers": ["AAPL", "ZZZZ"],
             "start_date": "2026-10-01",
