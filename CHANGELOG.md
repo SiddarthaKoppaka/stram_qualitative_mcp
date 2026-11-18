@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add `qual_get_short_interest` (`qual:read`): FINRA short interest by settlement date for up to 25
+  tickers (default window the last 120 days, at most 800, `limit` 1 to 500, default 50). Rows are numbers
+  and dates plus FINRA's `issue_name` (hidden characters removed); `published_estimated` says when a
+  figure became public (an estimate, settlement plus 8 days). A ticker with no row is named in
+  `warnings`, and a dataset that was never built is `unavailable`. Moves the pin to `stram_data` 1.14.0
+  at `830e1fe`, which adds `get_short_interest`; the lake must hold the `short_interest` dataset. Existing
+  tool contracts and schema hashes are unchanged (the schema file only gains lines).
 - Add `qual_get_filing_sections` (`qual:read`): the Items of 10-K and 10-Q filings by filing date, for
   tickers and/or accession numbers, with size and quality flags on every row. Text comes only with
   `include_text`, as a slice from an `offset` (at most 8,000 characters), so a long Item is read by

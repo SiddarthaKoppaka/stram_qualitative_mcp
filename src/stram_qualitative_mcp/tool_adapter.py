@@ -6,7 +6,7 @@ import hashlib
 import json
 import unicodedata
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 import stram_data
@@ -22,6 +22,7 @@ from stram_data.data_interface import (
     NewsQuery,
     NewsTimelineQuery,
     NotFoundError,
+    ShortInterestQuery,
 )
 
 from stram_qualitative_mcp.clean_views import clean_article, clean_filings, clean_news_search
@@ -49,9 +50,13 @@ from stram_qualitative_mcp.tool_models import (
     SectionCard,
     SectionsData,
     SectionsInput,
+    ShortInterestCard,
+    ShortInterestData,
+    ShortInterestInput,
     TimelineData,
     TimelineInput,
     TimelineRow,
+    short_interest_window,
     text_available,
 )
 from stram_qualitative_mcp.tool_registry import TOOLS_BY_NAME
@@ -83,6 +88,8 @@ class QualToolAdapter:
             data = self._dispatch(tool_name, request)
             # Warnings come from the raw result, so both views carry the same ones.
             warnings = _warnings(data)
+            if isinstance(request, ShortInterestInput) and isinstance(data, ShortInterestData):
+                warnings = (*warnings, *_short_interest_warnings(request, data))
             if getattr(request, "view", "raw") == "clean":
                 data = _clean(data, request)
             envelope = spec.output_model.model_validate(
@@ -115,6 +122,7 @@ class QualToolAdapter:
             (NewsFeedInput, self._feed),
             (InsiderTransactionsInput, self._insiders),
             (SectionsInput, self._sections),
+            (ShortInterestInput, self._short_interest),
         )
         for kind, handler in handlers:
             if isinstance(request, kind):
@@ -173,6 +181,29 @@ class QualToolAdapter:
             truncated=result.truncated,
             not_collected=result.not_collected,
             availability_note=result.availability_note,
+        )
+
+    def _short_interest(self, request: ShortInterestInput) -> ShortInterestData:
+        try:
+            start, end = short_interest_window(request.start_date, request.end_date, _today())
+        except ValueError as error:
+            raise ToolInputError from error
+        result = self._data.get_short_interest(
+            ShortInterestQuery(
+                tickers=request.tickers, start_date=start, end_date=end, limit=request.limit
+            )
+        )
+        return ShortInterestData(
+            rows=tuple(
+                ShortInterestCard.from_row(
+                    row, _strip_invisible(row.issue_name) if row.issue_name is not None else None
+                )
+                for row in result.rows
+            ),
+            count=result.count,
+            limit=result.limit,
+            truncated=result.truncated,
+            note=result.availability_note,
         )
 
     def _coverage(self) -> CoverageData:
@@ -281,6 +312,19 @@ def _strip_invisible(text: str) -> str:
         for character in text
         if character in "\n\t" or unicodedata.category(character) not in {"Cc", "Cf", "Cs"}
     )
+
+
+def _today() -> date:
+    return datetime.now(UTC).date()
+
+
+def _short_interest_warnings(request: ShortInterestInput, data: ShortInterestData) -> list[str]:
+    seen = {row.ticker for row in data.rows}
+    return [
+        f"no short interest figure for {ticker} in this range"
+        for ticker in request.tickers
+        if ticker not in seen
+    ]
 
 
 def _section_warnings(data: SectionsData) -> list[str]:
