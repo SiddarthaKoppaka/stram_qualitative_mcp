@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Add `qual_get_filing_sections` (`qual:read`): the Items of 10-K and 10-Q filings by filing date, for
+  tickers and/or accession numbers, with size and quality flags on every row. Text comes only with
+  `include_text`, as a slice from an `offset` (at most 8,000 characters), so a long Item is read by
+  stepping the offset while `has_more` is true. A missing Item is a row flagged `not_found`, a ticker
+  that was never collected is listed in `not_collected`, and a dataset that was never built is
+  `unavailable`. Moves the pin to `stram_data` 1.13.0 at `bd08a7e`, which adds
+  `get_filing_sections`; the lake must hold the `filing_section` dataset. Existing tool contracts and
+  schema hashes are unchanged (the schema file only gains lines).
 - News cards (`qual_search_news`, `qual_get_article`, `qual_get_news_feed`)
   gain `source_url`: the publisher's own page when known, else null. About 99.7% of Finnhub news
   carries only a `finnhub.io` forwarding link in `url`; the page the body fetcher reached is stored in

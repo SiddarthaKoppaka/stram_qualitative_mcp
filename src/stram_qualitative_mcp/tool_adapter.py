@@ -15,6 +15,7 @@ from stram_data.data_interface import (
     INTERFACE_VERSION,
     DataInterface,
     DataUnavailableError,
+    FilingSectionsQuery,
     InsiderTransactionsQuery,
     InvalidQueryError,
     NewsFeedQuery,
@@ -45,6 +46,9 @@ from stram_qualitative_mcp.tool_models import (
     NewsFeedInput,
     NewsSearchData,
     NewsSearchInput,
+    SectionCard,
+    SectionsData,
+    SectionsInput,
     TimelineData,
     TimelineInput,
     TimelineRow,
@@ -110,6 +114,7 @@ class QualToolAdapter:
             (TimelineInput, self._timeline),
             (NewsFeedInput, self._feed),
             (InsiderTransactionsInput, self._insiders),
+            (SectionsInput, self._sections),
         )
         for kind, handler in handlers:
             if isinstance(request, kind):
@@ -143,6 +148,30 @@ class QualToolAdapter:
             limit=result.limit,
             truncated=result.truncated,
             summary=result.summary,
+            availability_note=result.availability_note,
+        )
+
+    def _sections(self, request: SectionsInput) -> SectionsData:
+        result = self._data.get_filing_sections(
+            FilingSectionsQuery(
+                tickers=request.tickers,
+                accessions=request.accessions,
+                start_date=request.start_date,
+                end_date=request.end_date,
+                forms=request.forms,
+                items=request.items,
+                include_text=request.include_text,
+                max_chars=request.max_chars,
+                text_offset=request.offset,
+                limit=request.limit,
+            )
+        )
+        return SectionsData(
+            rows=tuple(SectionCard.from_row(row) for row in result.rows),
+            count=result.count,
+            limit=result.limit,
+            truncated=result.truncated,
+            not_collected=result.not_collected,
             availability_note=result.availability_note,
         )
 
@@ -254,6 +283,22 @@ def _strip_invisible(text: str) -> str:
     )
 
 
+def _section_warnings(data: SectionsData) -> list[str]:
+    warnings: list[str] = []
+    if any(row.has_more for row in data.rows):
+        warnings.append(
+            "Some text was cut; ask for that Item alone and call again with a larger offset "
+            "while has_more is true."
+        )
+    if data.not_collected:
+        warnings.append(
+            "Not collected: "
+            + ", ".join(data.not_collected)
+            + ". No rows for them does not mean they have no filing."
+        )
+    return warnings
+
+
 def _warnings(data: BaseModel) -> tuple[str, ...]:
     warnings: list[str] = []
     truncated = getattr(data, "truncated", False)
@@ -266,6 +311,8 @@ def _warnings(data: BaseModel) -> tuple[str, ...]:
         )
     elif truncated:
         warnings.append("Result is truncated; narrow the date range or filters.")
+    if isinstance(data, SectionsData):
+        warnings.extend(_section_warnings(data))
     as_of = getattr(data, "as_of", None)
     if as_of is not None and as_of < HISTORY_INGESTED_FROM:
         warnings.append("as_of precedes the ingestion of history, so few items are visible.")
