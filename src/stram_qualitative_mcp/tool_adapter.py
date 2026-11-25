@@ -246,6 +246,7 @@ class QualToolAdapter:
             truncated=result.truncated,
             as_of=result.as_of,
             availability_note=result.availability_note,
+            next_cursor=result.next_cursor,
         )
 
     def _filings(self, request: FilingsInput) -> FilingsData:

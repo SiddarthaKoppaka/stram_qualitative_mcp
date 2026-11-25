@@ -26,7 +26,7 @@ Successful calls return structured content with this envelope:
 ```json
 {
   "tool_version": "0.1.0",
-  "stram_data_version": "1.14.0",
+  "stram_data_version": "1.16.0",
   "interface_version": "1",
   "policy_version": "availability-policy-hash",
   "request_id": "server-generated-id",
@@ -91,7 +91,7 @@ No input. Use it before reading a quiet period as no news.
 
 ## `qual_search_news`
 
-Returns result cards, newest first.
+Returns result cards, newest first unless `order` says otherwise.
 
 | Input | Required | Default | Limit |
 |---|---|---|---|
@@ -104,9 +104,14 @@ Returns result cards, newest first.
 | `collapse_stories` | No | True | One row per story. Set false to see every copy |
 | `as_of` | No | None | Only versions stored by the end of this date |
 | `limit` | No | 20 | 1 to 100, counting stories when collapsed |
+| `order` | No | `published_desc` | `published_desc` (newest first), `published_asc` (oldest first), or `copies_desc` (most carried story first, then earliest; needs `collapse_stories`). Ties break by article id, so every order is total |
+| `after` | No | None | The previous result's `next_cursor`, sent with the same request and `order`. A cursor of another order is rejected |
 
-`data` holds `rows`, `count`, `limit`, `truncated`, `as_of` and `availability_note`. There is no cursor;
-`truncated=true` means narrow the request. Each row holds:
+`data` holds `rows`, `count`, `limit`, `truncated`, `as_of`, `availability_note` and `next_cursor`.
+`next_cursor` is set only when `truncated` is true: send it back as `after` to read the next page, and
+repeat until it is null. Pages neither skip nor repeat a row, even when articles share a timestamp,
+and `as_of` holds on every page. The 100-row cap per call is unchanged; a busy day is read in pages
+instead of by provider. Each row holds:
 
 | Field | Meaning |
 |---|---|
