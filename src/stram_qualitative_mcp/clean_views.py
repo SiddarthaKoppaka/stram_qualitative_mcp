@@ -85,6 +85,7 @@ def clean_news_search(data: NewsSearchData, min_confidence: float) -> CleanNewsS
             link.confidence < min_confidence for card in data.rows for link in card.tickers
         ),
         explanation=None if data.rows else NO_NEWS,
+        next_cursor=data.next_cursor,
     )
 
 

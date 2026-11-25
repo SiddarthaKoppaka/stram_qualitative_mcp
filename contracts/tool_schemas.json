@@ -185,6 +185,20 @@
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
+          "after": {
+            "anyOf": [
+              {
+                "maxLength": 220,
+                "pattern": "^[a-z_]{8,16}\\|[0-9A-Za-z:.+\\-|]{20,200}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "After"
+          },
           "as_of": {
             "anyOf": [
               {
@@ -226,6 +240,16 @@
             "minimum": 0.0,
             "title": "Min Confidence",
             "type": "number"
+          },
+          "order": {
+            "default": "published_desc",
+            "enum": [
+              "published_desc",
+              "published_asc",
+              "copies_desc"
+            ],
+            "title": "Order",
+            "type": "string"
           },
           "providers": {
             "default": [],
@@ -345,6 +369,18 @@
               "min_confidence": {
                 "title": "Min Confidence",
                 "type": "number"
+              },
+              "next_cursor": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Next Cursor"
               },
               "rows": {
                 "items": {
@@ -546,6 +582,18 @@
                 "title": "Limit",
                 "type": "integer"
               },
+              "next_cursor": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Next Cursor"
+              },
               "rows": {
                 "items": {
                   "$ref": "#/$defs/NewsCard"
@@ -653,7 +701,7 @@
         "title": "ToolEnvelope[Union[NewsSearchData, CleanNewsSearchData]]",
         "type": "object"
       },
-      "schemaHash": "677290beb4ed97d861656423c57480503207205ff515a4dad1946e799a57c19a",
+      "schemaHash": "c73e12afeddff013f1838a37e147fd9a5251ead46251ce63a04657c4f8cf0a7d",
       "scope": "qual:read"
     },
     {

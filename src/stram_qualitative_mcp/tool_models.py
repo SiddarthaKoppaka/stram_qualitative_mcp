@@ -71,6 +71,13 @@ FeedCursor = Annotated[
     str,
     StringConstraints(max_length=80, pattern=r"^[0-9T:.+\-]{19,40}\|[0-9a-f\-]{0,36}$"),
 ]
+# The Data Interface's get_news cursor (1.16): the order's name, then its key values, "|" joined.
+# Opaque to callers: pass a previous result's `next_cursor` back as `after`, with the same request.
+NewsCursor = Annotated[
+    str,
+    StringConstraints(max_length=220, pattern=r"^[a-z_]{8,16}\|[0-9A-Za-z:.+\-|]{20,200}$"),
+]
+NewsOrder = Literal["published_desc", "published_asc", "copies_desc"]
 MAX_FEED_TICKERS = 50
 MAX_SHORT_INTEREST_TICKERS = 25
 MAX_SHORT_INTEREST_SPAN_DAYS = 800
@@ -104,10 +111,19 @@ class NewsSearchInput(ContractModel):
     collapse_stories: bool = True
     as_of: date | None = None
     limit: int = Field(default=DEFAULT_RESULT_ROWS, ge=1, le=MAX_RESULT_ROWS)
+    # `published_desc` (newest first) is the order before paging existed. `copies_desc` lists the
+    # most carried story first, then the earliest, and needs collapse_stories. When the result is
+    # truncated, pass its `next_cursor` as `after`, with the same request, to read the next page.
+    order: NewsOrder = "published_desc"
+    after: NewsCursor | None = None
     view: ViewMode = "raw"
 
     @model_validator(mode="after")
     def validate_search(self) -> NewsSearchInput:
+        if self.order == "copies_desc" and not self.collapse_stories:
+            raise ValueError("order copies_desc needs collapse_stories")
+        if self.after is not None and not self.after.startswith(f"{self.order}|"):
+            raise ValueError("after must be a next_cursor returned for the same order")
         if self.start_date > self.end_date:
             raise ValueError("start_date must be on or before end_date")
         if not (self.tickers or self.providers or self.text):
@@ -469,6 +485,7 @@ class NewsSearchData(ContractModel):
     truncated: bool
     as_of: date | None
     availability_note: str
+    next_cursor: str | None = None  # set when truncated: pass it back as `after`
 
 
 class CleanNewsSearchData(ContractModel):
@@ -486,6 +503,7 @@ class CleanNewsSearchData(ContractModel):
     min_confidence: float
     links_below_min_confidence: int  # kept on their cards; the article matched on another link
     explanation: str | None
+    next_cursor: str | None = None  # set when truncated: pass it back as `after`
 
 
 class CleanFilingsData(ContractModel):

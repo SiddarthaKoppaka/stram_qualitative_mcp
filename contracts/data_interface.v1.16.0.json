@@ -1,7 +1,7 @@
 {
   "interface_version": "1",
-  "package_commit": "830e1fefc4eae9c7516ae29fdad7112dc2aa8666",
-  "package_version": "1.14.0",
+  "package_commit": "a53ef2a8d32d073a3cace47ae51f82d70c0aa7a3",
+  "package_version": "1.16.0",
   "public_methods": [
     "describe_availability_policies",
     "get_aligned_panel",

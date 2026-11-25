@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- `qual_search_news` gains optional `order` (`published_desc`, the default and today's behaviour,
+  `published_asc`, or `copies_desc`, which needs `collapse_stories`) and `after`, and its result gains
+  `next_cursor` (set only when `truncated`; send it back as `after` with the same request). Each order is
+  total, so paging neither skips nor repeats rows when timestamps tie, and `as_of` holds on every page.
+  The 100-row cap per call is unchanged. Moves the pin to `stram_data` 1.16.0, which adds
+  `NewsQuery.order`/`after` and `NewsResult.next_cursor`; the lake needs nothing new. The schema hash of
+  `qual_search_news` changes (the other tools' hashes do not), so STRAM's pinned copy of
+  `contracts/tool_schemas.json` must be updated together with this release. The pin is the commit of the
+  `stram_data` pull request until that is merged; it must be moved to the merged commit before this merges.
 - Add `qual_get_short_interest` (`qual:read`): FINRA short interest by settlement date for up to 25
   tickers (default window the last 120 days, at most 800, `limit` 1 to 500, default 50). Rows are numbers
   and dates plus FINRA's `issue_name` (hidden characters removed); `published_estimated` says when a
