@@ -9,8 +9,10 @@
   The 100-row cap per call is unchanged. Moves the pin to `stram_data` 1.16.0, which adds
   `NewsQuery.order`/`after` and `NewsResult.next_cursor`; the lake needs nothing new. The schema hash of
   `qual_search_news` changes (the other tools' hashes do not), so STRAM's pinned copy of
-  `contracts/tool_schemas.json` must be updated together with this release. The pin is the commit of the
-  `stram_data` pull request until that is merged; it must be moved to the merged commit before this merges.
+  `contracts/tool_schemas.json` must be updated together with this release. The pin is the merged
+  `stram_data` commit `f4396f5`.
+- Move the image's Debian snapshot to 2026-11-24: the 2026-11-15 security index expired on 2026-11-22, so
+  the image no longer built.
 - Add `qual_get_short_interest` (`qual:read`): FINRA short interest by settlement date for up to 25
   tickers (default window the last 120 days, at most 800, `limit` 1 to 500, default 50). Rows are numbers
   and dates plus FINRA's `issue_name` (hidden characters removed); `published_estimated` says when a
